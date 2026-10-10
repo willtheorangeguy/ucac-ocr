@@ -1,0 +1,30 @@
+{% extends 'base.html' %}{% block navigation %}{% endblock %}{% block content %}
+<div id="job" data-job="{{job.id}}">
+  <h1>{{'%04d-%02d'|format(job.year,job.month)}} headcounts</h1>
+  <section class="step panel" aria-labelledby="corners-heading">
+    <h2 id="corners-heading"><span class="step-number">1</span> Mark the table corners</h2>
+    <p id="corner-summary"></p>
+    <div id="corner-editor" hidden>
+      <p>Click around all seven columns and count rows, excluding the heading: <strong>top left, top right, bottom right, bottom left</strong>.</p>
+      <p id="corner-filename"></p>
+      <canvas id="corner-canvas" aria-label="Click the four table corners"></canvas>
+      <p id="corner-status" role="status"></p>
+      <button type="button" id="clear-corners">Start corners again</button>
+    </div>
+  </section>
+  <section class="step panel" aria-labelledby="progress-heading">
+    <h2 id="progress-heading"><span class="step-number">2</span> Track progress</h2>
+    <div id="progress" aria-live="polite"></div>
+    <progress id="bar" max="100" value="0"></progress>
+    <p id="diagnostic"></p><div id="progress-recovery"></div>
+  </section>
+  <section class="step panel" aria-labelledby="fixes-heading">
+    <h2 id="fixes-heading"><span class="step-number">3</span> Fix flagged images</h2>
+    <div id="issues"></div>
+  </section>
+  <section class="step panel" aria-labelledby="download-heading">
+    <h2 id="download-heading"><span class="step-number">4</span> Download the workbook</h2>
+    <div id="exports" aria-live="polite"></div>
+  </section>
+</div>
+{% endblock %}

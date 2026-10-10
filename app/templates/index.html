@@ -1,0 +1,10 @@
+{% extends 'base.html' %}{% block content %}
+<h1>Import a month</h1><p>Add your workbook and photos. Processing continues when you close this browser.</p>
+<form action="/jobs" method="post" enctype="multipart/form-data">
+  <section class="step panel"><h2><span class="step-number">1</span> Choose the month</h2><label>Month<input type="month" name="month" required value="2026-10"></label></section>
+  <section class="step panel"><h2><span class="step-number">2</span> Add the workbook</h2><label>Workbook template<input type="file" name="template" accept=".xlsx" required></label><label>Workbook mode<select name="mode"><option value="new-month">Start a new month</option><option value="continuation">Continue this month's existing workbook</option></select></label></section>
+  <section class="step panel"><h2><span class="step-number">3</span> Add the photos</h2><label>Photos or ZIP<input type="file" name="photos" accept="image/jpeg,image/png,image/webp,.zip" multiple required></label><p>JPEG, PNG and WebP photos, or a ZIP containing them.</p></section>
+  <section class="step panel"><h2><span class="step-number">4</span> Start the import</h2><p>Next, mark the table corners and follow the progress.</p><button>Create batch</button></section>
+</form>
+<section class="panel"><h2>Your batches</h2>{% for j in jobs %}<a class="batch" href="/jobs/{{j.id}}"><strong>{{'%04d-%02d'|format(j.year,j.month)}}</strong><span>{{j.state|replace('_',' ')}}</span></a>{% else %}<p>No batches yet.</p>{% endfor %}</section>
+{% endblock %}

@@ -1,0 +1,36 @@
+services:
+  web:
+    build: .
+    image: pool-headcount:local
+    env_file: .env
+    environment:
+      DATA_DIR: /data
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - pool-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  worker:
+    image: pool-headcount:local
+    depends_on:
+      web:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DATA_DIR: /data
+    command: ["python", "-m", "app.worker"]
+    volumes:
+      - pool-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-m", "app.cli", "worker-health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+volumes:
+  pool-data:
