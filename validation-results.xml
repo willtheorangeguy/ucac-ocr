@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="40" time="550.694" timestamp="2026-10-10T12:47:34.352336-06:00" hostname="WilliamVXPS"><testcase classname="tests.test_ingestion" name="test_decoded_dedup_and_corrupt_continue" time="0.556" /><testcase classname="tests.test_ingestion" name="test_zip_paths[../evil.jpg]" time="0.005" /><testcase classname="tests.test_ingestion" name="test_zip_paths[/root/a.jpg]" time="0.012" /><testcase classname="tests.test_ingestion" name="test_zip_paths[C:\\a.jpg]" time="0.002" /><testcase classname="tests.test_ingestion" name="test_zip_paths[x/../../a.jpg]" time="0.002" /><testcase classname="tests.test_ingestion" name="test_zip_limits" time="0.003" /><testcase classname="tests.test_ingestion" name="test_real_photo_geometry" time="2.670" /><testcase classname="tests.test_recovery_export" name="test_pause_after_active_request_checkpoints" time="1.938" /><testcase classname="tests.test_recovery_export" name="test_circuit_breaker_persisted_across_restart" time="3.273" /><testcase classname="tests.test_recovery_export" name="test_export_failure_retry_and_edit_during_export" time="43.518" /><testcase classname="tests.test_recovery_export" name="test_consistent_backup" time="0.340" /><testcase classname="tests.test_review" name="test_conflict_review_protected_new_evidence" time="0.479" /><testcase classname="tests.test_review" name="test_date_repair_reuses_successful_tasks" time="0.348" /><testcase classname="tests.test_review" name="test_immutable_export_revision_and_review_regeneration" time="42.283" /><testcase classname="tests.test_schemas" name="test_zero_blank_and_addition" time="0.002" /><testcase classname="tests.test_schemas" name="test_reject_expressions[30 - 2-terms0]" time="0.002" /><testcase classname="tests.test_schemas" name="test_reject_expressions[1 * 2-terms1]" time="0.002" /><testcase classname="tests.test_schemas" name="test_reject_expressions[30 + 2-terms2]" time="0.003" /><testcase classname="tests.test_schemas" name="test_reject_expressions[__import__(&quot;os&quot;)-terms3]" time="0.003" /><testcase classname="tests.test_schemas" name="test_reject_expressions[-1-terms4]" time="0.007" /><testcase classname="tests.test_schemas" name="test_reject_expressions[2.5-terms5]" time="0.003" /><testcase classname="tests.test_schemas" name="test_reject_expressions[\u2192-terms6]" time="0.003" /><testcase classname="tests.test_schemas" name="test_alignment_missing_rows_rejected" time="0.002" /><testcase classname="tests.test_streaming" name="test_delayed_first_chunk_and_gaps" time="0.781" /><testcase classname="tests.test_streaming" name="test_failures[disconnect-ContentError]" time="0.668" /><testcase classname="tests.test_streaming" name="test_failures[truncated-ContentError]" time="0.725" /><testcase classname="tests.test_streaming" name="test_failures[malformed-ContentError]" time="0.710" /><testcase classname="tests.test_streaming" name="test_failures[503-AvailabilityError]" time="0.693" /><testcase classname="tests.test_streaming" name="test_failures[400-PermanentError]" time="0.679" /><testcase classname="tests.test_streaming" name="test_failures[oom-ResourceError]" time="0.665" /><testcase classname="tests.test_streaming" name="test_read_inactivity_timeout" time="0.631" /><testcase classname="tests.test_streaming" name="test_wall_watchdog_closes_request" time="0.642" /><testcase classname="tests.test_web" name="test_pages_upload_review_and_origin" time="0.490" /><testcase classname="tests.test_workbook" name="test_actual_fixture_month_and_fidelity" time="185.120" /><testcase classname="tests.test_workbook" name="test_leap_year_blanks_zeros_averages" time="99.849" /><testcase classname="tests.test_worker" name="test_62_sources_sequential_resume_and_autoexport" time="95.641" /><testcase classname="tests.test_worker" name="test_outage_is_recoverable_without_content_budget" time="24.670" /><testcase classname="tests.test_worker" name="test_second_worker_refused_and_interrupted_checkpoint" time="0.214" /><testcase classname="tests.test_worker" name="test_actual_killed_worker_reruns_only_interrupted_task" time="10.022"><failure message="subprocess.CalledProcessError: Command '['taskkill', '/PID', '11912', '/T', '/F']' returned non-zero exit status 255.">data = WindowsPath('C:/Users/William Vandergraaf/AppData/Local/Temp/pytest-of-William Vandergraaf/pytest-151/test_actual_killed_worker_reru0/data')
+photo = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00d\x00\x00\x00d\x08\x02\x00\x00\x00\xff\x80\x02\x03\x00\x00\x00\xe6IDA...V V V V V V V V V V V V V V V V V V V V V V \xd6\xd9\xfb\xcf\xf1\x03\xc5\xb1\x9c\x97\xce\x00\x00\x00\x00IEND\xaeB`\x82'
+ollama = &lt;conftest.MockState object at 0x000001ED98E1C130&gt;
+
+    def test_actual_killed_worker_reruns_only_interrupted_task(data,photo,ollama):
+        job=make_job(data);add_tasks(data,job,photo)
+        ollama.delay=30  # Leave enough time for Windows taskkill to reach the interpreter.
+        env=os.environ.copy();env.update(DATA_DIR=str(data),OLLAMA_BASE_URL=settings.ollama_base_url,DISCONNECT_COOLDOWN='0.5',RETRY_DELAYS='0.01,0.02,0.03,0.04,0.05')
+        process=subprocess.Popen([sys.executable,'-m','app.worker'],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)
+        try:
+            assert ollama.started.wait(15)
+            if os.name=='nt':
+                # Windows venv python.exe launches a child interpreter; kill the tracked tree.
+&gt;               subprocess.run(['taskkill','/PID',str(process.pid),'/T','/F'],check=True,capture_output=True)
+
+tests\test_worker.py:91: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+input = None, capture_output = True, timeout = None, check = True
+popenargs = (['taskkill', '/PID', '11912', '/T', '/F'],)
+kwargs = {'stdout': -1, 'stderr': -1}
+
+    def run(*popenargs,
+            input=None, capture_output=False, timeout=None, check=False, **kwargs):
+        """Run command with arguments and return a CompletedProcess instance.
+    
+        The returned instance will have attributes args, returncode, stdout and
+        stderr. By default, stdout and stderr are not captured, and those attributes
+        will be None. Pass stdout=PIPE and/or stderr=PIPE in order to capture them,
+        or pass capture_output=True to capture both.
+    
+        If check is True and the exit code was non-zero, it raises a
+        CalledProcessError. The CalledProcessError object will have the return code
+        in the returncode attribute, and output &amp; stderr attributes if those streams
+        were captured.
+    
+        If timeout (seconds) is given and the process takes too long,
+         a TimeoutExpired exception will be raised.
+    
+        There is an optional argument "input", allowing you to
+        pass bytes or a string to the subprocess's stdin.  If you use this argument
+        you may not also use the Popen constructor's "stdin" argument, as
+        it will be used internally.
+    
+        By default, all communication is in bytes, and therefore any "input" should
+        be bytes, and the stdout and stderr will be bytes. If in text mode, any
+        "input" should be a string, and stdout and stderr will be strings decoded
+        according to locale encoding, or by "encoding" if set. Text mode is
+        triggered by setting any of text, encoding, errors or universal_newlines.
+    
+        The other arguments are the same as for the Popen constructor.
+        """
+        if input is not None:
+            if kwargs.get('stdin') is not None:
+                raise ValueError('stdin and input arguments may not both be used.')
+            kwargs['stdin'] = PIPE
+    
+        if capture_output:
+            if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+                raise ValueError('stdout and stderr arguments may not be used '
+                                 'with capture_output.')
+            kwargs['stdout'] = PIPE
+            kwargs['stderr'] = PIPE
+    
+        with Popen(*popenargs, **kwargs) as process:
+            try:
+                stdout, stderr = process.communicate(input, timeout=timeout)
+            except TimeoutExpired as exc:
+                process.kill()
+                if _mswindows:
+                    # Windows accumulates the output in a single blocking
+                    # read() call run on child threads, with the timeout
+                    # being done in a join() on those threads.  communicate()
+                    # _after_ kill() is required to collect that and add it
+                    # to the exception.
+                    exc.stdout, exc.stderr = process.communicate()
+                else:
+                    # POSIX _communicate already populated the output so
+                    # far into the TimeoutExpired exception.
+                    process.wait()
+                raise
+            except:  # Including KeyboardInterrupt, communicate handled that.
+                process.kill()
+                # We don't call process.wait() as .__exit__ does that for us.
+                raise
+            retcode = process.poll()
+            if check and retcode:
+&gt;               raise CalledProcessError(retcode, process.args,
+                                         output=stdout, stderr=stderr)
+E               subprocess.CalledProcessError: Command '['taskkill', '/PID', '11912', '/T', '/F']' returned non-zero exit status 255.
+
+C:\Python314\Lib\subprocess.py:578: CalledProcessError</failure></testcase><testcase classname="tests.test_worker" name="test_permanent_error_pauses_and_content_error_defers" time="24.905" /></testsuite></testsuites>

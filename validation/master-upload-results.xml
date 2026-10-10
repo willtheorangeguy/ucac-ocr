@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="37.164" timestamp="2026-10-10T13:19:01.487410-06:00" hostname="WilliamVXPS"><testcase classname="tests.test_master_references" name="test_web_upload_accepts_actual_template" time="25.710" /></testsuite></testsuites>

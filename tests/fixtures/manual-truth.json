@@ -1,0 +1,14 @@
+{
+  "photo": "morning-2026-10-09.jpg",
+  "date": "2026-10-09",
+  "section": "morning",
+  "scope": "Manually inspected subset only; no whole-sheet ground truth claim",
+  "rows": {
+    "05:15": {"public": {"kind": "integer", "terms": [0]}, "group": {"kind": "sum", "terms": [30, 2]}, "dry": {"kind": "integer", "terms": [2]}},
+    "05:30": {"group": {"kind": "unclear", "ambiguous": true}},
+    "06:30": {"public": {"kind": "integer", "terms": [0]}, "group": {"kind": "blank"}, "dry": {"kind": "blank"}},
+    "11:15": {"public": {"kind": "unclear", "ambiguous": true}},
+    "12:00": {"public": {"kind": "unclear", "ambiguous": true}, "group": {"kind": "unclear", "ambiguous": true}, "dry": {"kind": "unclear", "ambiguous": true}},
+    "12:45": {"public": {"kind": "blank"}, "group": {"kind": "blank"}, "dry": {"kind": "blank"}}
+  }
+}

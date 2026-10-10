@@ -1,0 +1,23 @@
+{
+  "models": [
+    {
+      "name": "qwen3.5-hermes:64k",
+      "model": "qwen3.5-hermes:64k",
+      "size": 6014380276,
+      "digest": "b7b9afeaf023a549a9e6fc7960694f3c32fc490d415bbdf1751e2f390cf4ae48",
+      "details": {
+        "parent_model": "",
+        "format": "gguf",
+        "family": "qwen35",
+        "families": [
+          "qwen35"
+        ],
+        "parameter_size": "9.7B",
+        "quantization_level": "Q4_K_M"
+      },
+      "expires_at": "2026-10-10T13:22:31.994181039-06:00",
+      "size_vram": 6014380276,
+      "context_length": 16384
+    }
+  ]
+}

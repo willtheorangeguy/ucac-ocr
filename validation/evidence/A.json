@@ -1,0 +1,1 @@
+{"date":null,"section":"unknown","ambiguous":false,"reason":null,"rows":[{"time":"05:15","public":{"raw_text":"0","kind":"integer","terms":[0],"ambiguous":false,"reason":null},"group":{"raw_text":"30 + 2","kind":"sum","terms":[30,2],"ambiguous":false,"reason":null},"dry":{"raw_text":"2","kind":"integer","terms":[2],"ambiguous":false,"reason":null}}]}
