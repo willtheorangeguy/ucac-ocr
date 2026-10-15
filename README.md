@@ -99,9 +99,14 @@ Edit `.env` to set `OLLAMA_BASE_URL` and `OLLAMA_MODEL` for your server. For Oll
 on the Docker host, use `http://host.docker.internal:11434`; for another machine,
 use its LAN address. `BIND_ADDRESS` and `PORT` control where the web app listens.
 
-The repository and container package are private. On each new host, log in once
-with a GitHub personal access token (classic) that has `read:packages` and access
-to this package; enter it at Docker's password prompt:
+Public container images can be pulled without logging in. Container visibility
+is separate from repository visibility: the package owner can enable public
+pulls in [Package settings](https://github.com/users/willtheorangeguy/packages/container/ucac-ocr/settings)
+under **Danger Zone → Change visibility → Public**.
+
+If the container package is private, log in once on each new host with a GitHub
+personal access token (classic) that has `read:packages` and access to this
+package; enter it at Docker's password prompt:
 
 ```sh
 docker login ghcr.io --username willtheorangeguy
