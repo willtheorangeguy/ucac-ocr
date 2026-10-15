@@ -103,7 +103,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-        run: gh release upload "$RELEASE_TAG" dist/compose.yaml dist/.env --clobber
+        run: gh release upload "$RELEASE_TAG" dist/compose.yaml dist/default.env "dist/ucac-ocr-$RELEASE_TAG.zip" --clobber
 
       - name: Clean up the smoke-test services and temporary data
         if: always() && steps.publish.outcome == 'success'

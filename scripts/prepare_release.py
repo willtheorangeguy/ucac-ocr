@@ -1,6 +1,7 @@
 """Prepare standalone Compose downloads from tracked example configuration."""
 import argparse
 import re
+import zipfile
 from pathlib import Path
 
 
@@ -20,6 +21,11 @@ def prepare(tag,image,destination):
     example=(ROOT/'.env.example').read_text()
     example=re.sub(r'^POOL_HEADCOUNT_IMAGE=.*$',lambda _:f'POOL_HEADCOUNT_IMAGE={image}:{version}',example,flags=re.MULTILINE)
     (destination/'.env').write_text(example,encoding='utf-8',newline='\n')
+    # GitHub renames a leading-dot release asset to default.env. Provide that
+    # explicit name and a ZIP that preserves the two deployment filenames.
+    (destination/'default.env').write_text(example,encoding='utf-8',newline='\n')
+    with zipfile.ZipFile(destination/f'ucac-ocr-{tag}.zip','w',zipfile.ZIP_DEFLATED) as archive:
+        for name in ('compose.yaml','.env'):archive.write(destination/name,name)
     return version
 
 

@@ -1,6 +1,7 @@
 import json
 import shutil
 import subprocess
+import zipfile
 
 import pytest
 
@@ -12,13 +13,18 @@ IMAGE='ghcr.io/willtheorangeguy/ucac-ocr'
 
 @pytest.mark.skipif(shutil.which('docker') is None,reason='Docker Compose CLI is unavailable')
 def test_release_files_work_without_a_checkout_or_dockerfile(tmp_path):
-    prepare('v0.1.0',IMAGE,tmp_path)
-    assert {p.name for p in tmp_path.iterdir()}=={'compose.yaml','.env'}
-    environment=(tmp_path/'.env').read_text()
+    assets=tmp_path/'assets';deployment=tmp_path/'deployment'
+    prepare('v0.1.0',IMAGE,assets)
+    assert (assets/'default.env').read_bytes()==(assets/'.env').read_bytes()
+    with zipfile.ZipFile(assets/'ucac-ocr-v0.1.0.zip') as archive:
+        assert set(archive.namelist())=={'compose.yaml','.env'}
+        archive.extractall(deployment)
+    assert {p.name for p in deployment.iterdir()}=={'compose.yaml','.env'}
+    environment=(deployment/'.env').read_text()
     assert f'POOL_HEADCOUNT_IMAGE={IMAGE}:0.1.0' in environment
     # Use the Compose parser to verify file-relative env paths and interpolation.
-    result=subprocess.run(['docker','compose','--project-directory',str(tmp_path),'--env-file',str(tmp_path/'.env'),
-                           '-f',str(tmp_path/'compose.yaml'),'config','--format','json'],capture_output=True,text=True)
+    result=subprocess.run(['docker','compose','--project-directory',str(deployment),'--env-file',str(deployment/'.env'),
+                           '-f',str(deployment/'compose.yaml'),'config','--format','json'],capture_output=True,text=True)
     if result.returncode and ('not found' in result.stderr.lower() or 'not recognized' in result.stderr.lower()):
         pytest.skip('Docker Compose is unavailable')
     assert result.returncode==0,result.stderr

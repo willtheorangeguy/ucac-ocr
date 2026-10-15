@@ -81,14 +81,19 @@ cp .env.example .env
 
 ## Docker Compose
 
-Published releases include everything needed for deployment: **compose.yaml**
-and an example **.env** pinned to that release's container image. Start Docker
-Desktop (Linux containers) or the Linux Docker engine, then download both files
-into one directory. You can use the release page or GitHub CLI:
+Published releases include a ZIP containing **compose.yaml** and an example
+**.env** pinned to that release's container image. Start Docker Desktop (Linux
+containers) or the Linux Docker engine, then download and extract the ZIP into
+one directory. You can use the release page or GitHub CLI:
 
 ```sh
-gh release download v0.1.0 --repo willtheorangeguy/ucac-ocr --pattern compose.yaml --pattern .env
+gh release download v0.1.0 --repo willtheorangeguy/ucac-ocr --pattern ucac-ocr-v0.1.0.zip
+unzip ucac-ocr-v0.1.0.zip
 ```
+
+On Windows, extract the ZIP with Explorer or `Expand-Archive`. The files are
+also attached separately as `compose.yaml` and `default.env`; save `default.env`
+as `.env` when downloading them individually.
 
 Edit `.env` to set `OLLAMA_BASE_URL` and `OLLAMA_MODEL` for your server. For Ollama
 on the Docker host, use `http://host.docker.internal:11434`; for another machine,
