@@ -1,5 +1,7 @@
 # Pool headcount photo importer — Codex implementation plan
 
+> Historical design specification. Current operating instructions live in [docs/README.md](docs/README.md). Later operator decisions supersede the original strict OCR, copy-down, and daily-sheet export policies; see [count and workbook rules](docs/rules.md).
+
 ## Build brief
 
 Build a local, self-hosted application that accepts an entire month's pool headcount photos, processes them sequentially through an existing remote Ollama server, and produces one monthly XLSX using the supplied workbook's layout and MASTER calculations.
