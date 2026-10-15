@@ -1,12 +1,15 @@
+name: ucac-ocr
+
 services:
   web:
-    build: .
-    image: pool-headcount:local
+    image: ${POOL_HEADCOUNT_IMAGE:-ghcr.io/willtheorangeguy/ucac-ocr:0.1.0}
     env_file: .env
     environment:
       DATA_DIR: /data
     ports:
-      - "127.0.0.1:8000:8000"
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT:-8000}:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - pool-data:/data
     restart: unless-stopped
@@ -16,13 +19,15 @@ services:
       timeout: 10s
       retries: 3
   worker:
-    image: pool-headcount:local
+    image: ${POOL_HEADCOUNT_IMAGE:-ghcr.io/willtheorangeguy/ucac-ocr:0.1.0}
     depends_on:
       web:
         condition: service_healthy
     env_file: .env
     environment:
       DATA_DIR: /data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     command: ["python", "-m", "app.worker"]
     volumes:
       - pool-data:/data

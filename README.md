@@ -81,15 +81,57 @@ cp .env.example .env
 
 ## Docker Compose
 
-Start Docker Desktop (Linux containers) or the Linux Docker engine first:
+Published releases include everything needed for deployment: **compose.yaml**
+and an example **.env** pinned to that release's container image. Start Docker
+Desktop (Linux containers) or the Linux Docker engine, then download both files
+into one directory. You can use the release page or GitHub CLI:
 
 ```sh
-cp .env.example .env
-docker compose build
-docker compose run --rm web python -m app.cli migrate
+gh release download v0.1.0 --repo willtheorangeguy/ucac-ocr --pattern compose.yaml --pattern .env
+```
+
+Edit `.env` to set `OLLAMA_BASE_URL` and `OLLAMA_MODEL` for your server. For Ollama
+on the Docker host, use `http://host.docker.internal:11434`; for another machine,
+use its LAN address. `BIND_ADDRESS` and `PORT` control where the web app listens.
+
+The repository and container package are private. On each new host, log in once
+with a GitHub personal access token (classic) that has `read:packages` and access
+to this package; enter it at Docker's password prompt:
+
+```sh
+docker login ghcr.io --username willtheorangeguy
+```
+
+Then start the app:
+
+```sh
 docker compose up -d
 docker compose logs -f worker
 ```
+
+Open <http://localhost:8000>. Web and worker use the same published image;
+database setup and upgrades run automatically. Only these two downloaded files
+are needed. Keep your configured `.env` locally; release attachments are always
+generated from `.env.example`, never from an operator's `.env`.
+
+To upgrade, update `POOL_HEADCOUNT_IMAGE` in `.env` to the desired release, then
+run `docker compose pull` and `docker compose up -d`.
+
+For development from a full source checkout, build locally with the override:
+
+```sh
+cp .env.example .env
+docker compose -f compose.yaml -f compose.build.yaml up -d --build
+docker compose logs -f worker
+```
+
+Publishing a GitHub release such as `v0.1.0` runs
+[Publish release container](.github/workflows/publish-container.yml). It tests the
+container, publishes AMD64/ARM64 images to `ghcr.io/willtheorangeguy/ucac-ocr`,
+checks standalone startup, and attaches the deployment files. A stable release
+gets `0.1.0`, `v0.1.0`, `0.1`, and `latest` tags; prereleases do not update
+the minor or latest tags. Publishing uses the repository's `GITHUB_TOKEN` with
+package write permission, so no separate registry secret is needed.
 
 The two CPU application services share `pool-data`. No Ollama service is deployed.
 Health checks use HTTP for web and the worker's independent heartbeat. Only one
