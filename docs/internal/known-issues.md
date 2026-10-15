@@ -12,7 +12,8 @@ which also covers deliberate non-goals.
 
 ## 1. Calibration requires B-pass tasks that the default profile does not create
 
-**Severity:** Medium  
+**Severity:** Medium
+
 **Where:** `app/calibration.py:32-34`; `app/preprocessing.py:265-266`; `app/config.py:18`
 
 **What:** The calibration command unconditionally selects a B header task with next(...). The default VERIFICATION=off setting skips creation of B tasks. The selection therefore raises StopIteration (surfacing as RuntimeError in the coroutine) before the benchmark request loop when run with the default profile.
@@ -20,5 +21,3 @@ which also covers deliberate non-goals.
 **Why it matters:** The documented live benchmark cannot run with the shipped default settings, which prevents operators from obtaining its date/first-row comparison report.
 
 **Suggested fix:** Either make calibration explicitly construct its A/B benchmark independently of the production profile, or validate the required profile before creating records. Until then, use an isolated DATA_DIR with VERIFICATION=always and ROUGH_COUNTS=false as documented in docs/testing.md.
-
-
