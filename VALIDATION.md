@@ -1,5 +1,7 @@
 # Validation — October 14, 2026
 
+> Historical validation record, retained with its original results and limitations. Current test procedures and calibration prerequisites are in [docs/testing.md](docs/testing.md); these saved results do not represent a new run.
+
 ## Fuzzy row geometry — October 15, 2026
 
 The grid-6 matcher combines evidence from five strips across each table, corrects
