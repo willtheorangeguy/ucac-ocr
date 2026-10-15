@@ -1,10 +1,10 @@
-# Pool Headcount — Commands
+# Commands
 
 Run commands from the checkout with its virtual environment interpreter. The examples use `python`; substitute `.venv/bin/python` on Linux or `.\.venv\Scripts\python.exe` on Windows. For a running container deployment, prefix commands with `docker compose exec web`, for example `docker compose exec web python -m app.cli status JOB_ID`.
 
 `JOB_ID`, `EXPORT_ID`, and filesystem paths below are placeholders. Status JSON exposes source, task, issue, attempt, cell, and export identifiers. Settings come from the same environment and `DATA_DIR` as the services. The CLI shares application services directly; it does not call the HTTP API.
 
-## Complete CLI reference
+## Command reference
 
 | Command after `python -m app.cli` | Effect |
 | --- | --- |
@@ -26,36 +26,68 @@ Run commands from the checkout with its virtual environment interpreter. The exa
 
 `python -m app.cli --help` and `python -m app.cli import-month --help` show argument syntax. Except for `worker-health`, commands run migrations before their action. Most results print JSON; failures propagate as command errors. Do not use a live data directory merely to explore mutating commands.
 
-## Import and follow a batch
+## Arguments and flags
 
-```sh
-python -m app.cli import-month --month 2026-10 --template "Head Counts.xlsx" --photos /path/to/photos --mode new-month
-python -m app.cli status JOB_ID
-python -m app.cli add JOB_ID /path/to/more-photos.zip
+`import-month` is the only subcommand with options. Other job commands accept a positional job ID; `add` adds a photo path, `backup` accepts a new destination, and `recalculate` accepts an integer export ID.
+
+| Flag | Type | Default | Description |
+| --- | --- | --- | --- |
+| `--month` | `YYYY-MM` string | required | Target calendar month, such as `2026-10`. |
+| `--template` | file path | required | Supported workbook path. |
+| `--photos` | file/directory path | required | Photo, ZIP, or recursively read folder. |
+| `--mode` | string enum | `new-month` | `new-month` or `continuation`. |
+
+## Worked command sequence
+
+This POSIX shell example uses the checked-in workbook/photo and a temporary data directory, with no worker running against it. Run from an installed source checkout. It exercises durable commands without sending OCR requests or changing operator data. `job_id` and `export_id` come from real command responses rather than hardcoded IDs.
+
+```bash
+export DATA_DIR="$(mktemp -d /tmp/ucac-cli-example.XXXXXX)"
+python -m app.cli migrate
+job_id=$(python -m app.cli import-month --month 2026-10 \
+  --template 'tests/fixtures/Head Counts.xlsx' \
+  --photos tests/fixtures/morning-2026-10-09.jpg --mode new-month \
+  | python -c 'import json,sys; print(json.load(sys.stdin)["job"])')
+python -m app.cli status "$job_id"
+python -m app.cli pause "$job_id"
+python -m app.cli refresh "$job_id"
+python -m app.cli resume "$job_id"
+python -m app.cli cancel "$job_id"
+python -m app.cli resume "$job_id"
+python -m app.cli retry "$job_id"
+python -m app.cli add "$job_id" tests/fixtures/morning-2026-10-09.jpg
+python -m app.cli coverage "$job_id"
+export_id=$(python -m app.cli export "$job_id" \
+  | python -c 'import json,sys; print(json.load(sys.stdin)["id"])')
+python -m app.cli pause "$job_id"
+backup_parent=$(mktemp -d /tmp/ucac-cli-backup.XXXXXX)
+python -m app.cli backup "$backup_parent/snapshot"
 ```
 
-The import command returns `{"job": "..."}`. A separately running worker is required for OCR. CLI import/add use automatic photo layout; there is no CLI layout flag. Use the web form or source configuration API for explicit `new-paper`/`monthly` layouts.
+The import prints a job identifier. Adding the same photo returns zero new sources because hashes are deduplicated. With no worker, the export is a draft with pending evidence. Coverage acknowledgement creates no counts. `refresh` retains successful readings/reviews and refuses an in-flight task. `retry` resets failed tasks rather than reissuing completed ones.
 
-## Manage work and regenerate
+CLI import/add use automatic photo layout. There is no CLI layout flag. Use the browser or [API](api.md) for explicit revised-paper/monthly layouts and source/cell corrections.
 
-```sh
-python -m app.cli pause JOB_ID
-# Wait until status shows no in_flight tasks.
-python -m app.cli refresh JOB_ID
-python -m app.cli resume JOB_ID
-python -m app.cli export JOB_ID
+## Diagnostics and worker health
+
+Run diagnostics in the configured deployment environment:
+
+```bash
+python -m app.cli diagnostics
+python -m app.cli worker-health
 ```
 
-`refresh` retains reviews and successful readings. `retry` targets failed tasks rather than repeating completed calls. Acknowledging coverage does not fabricate counts. Reprocessing a photo or correcting a cell requires the [API](./api.md) or browser review controls.
+Diagnostics contacts the configured Ollama endpoint. It prints version, model, capabilities, and digest metadata on success. Worker health exits 0 only with a recent heartbeat. It exits 1 in the isolated example above because no worker has acquired the data directory.
 
-## Backup and recalculation
+## Optional recalculation
 
-```sh
-python -m app.cli backup /path/outside/data/backup-2026-10-15
-python -m app.cli recalculate EXPORT_ID
+After installing LibreOffice, the previous command sequence supplies a real `export_id`. With that executable configured, run:
+
+```bash
+LIBREOFFICE=/usr/bin/libreoffice python -m app.cli recalculate "$export_id"
 ```
 
-The backup destination must not already exist. Pause all batches and wait for active inference first. In containers, mount a backup directory; see the full [deployment procedure](./deployment.md). Recalculation requires an installed executable configured by `LIBREOFFICE`; it is not bundled in the application image.
+The command requires the executable to exist and can fail if conversion or verification fails. It preserves the original artifact and exposes a verified separate result on success. The application image does not bundle LibreOffice. See [Deployment and recovery](deployment.md) for mounted backup directories and restore constraints.
 
 ## Other entry points
 

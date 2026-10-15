@@ -53,7 +53,7 @@ Edit the extracted `.env` to set `OLLAMA_BASE_URL` and `OLLAMA_MODEL`, then run:
 docker compose up -d
 ```
 
-Open <http://localhost:8000>. See the [quickstart](docs/quickstart.md) for checks
+Open <http://localhost:8000>. See the [quickstart](docs/getting-started.md) for checks
 and [installation](docs/installation.md) for source and Windows options.
 
 ## Usage
@@ -66,7 +66,7 @@ blank and appear in the workbook's import report.
 
 ## Documentation
 
-Full documentation lives in [`docs/`](docs/README.md):
+Full documentation lives in [`docs/`](docs/index.md):
 [Installation](docs/installation.md) · [Usage](docs/usage.md) · [Configuration](docs/configuration.md) · [Troubleshooting](docs/troubleshooting.md)
 
 ## Support

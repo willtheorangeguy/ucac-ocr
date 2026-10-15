@@ -7,7 +7,6 @@ licensing decision rather than a documentation one.
 Ordered by severity. See [`docs/roadmap.md`](../roadmap.md) for the narrative version,
 which also covers deliberate non-goals.
 
-
 **1 open:** 1 medium.
 
 ## 1. Calibration requires B-pass tasks that the default profile does not create

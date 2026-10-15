@@ -1,4 +1,4 @@
-# Pool Headcount — Troubleshooting
+# Troubleshooting
 
 Collect status and the job diagnostic before retrying. These examples assume a running Compose deployment; use the virtual environment interpreter for source installs.
 
@@ -63,9 +63,9 @@ Export failures use `awaiting_review` and a diagnostic. Check disk space, file p
 
 Excel formulas are not evaluated by Python. Open the workbook in a compatible spreadsheet application and inspect `IMPORT REPORT`. Optional recalculation requires `LIBREOFFICE` to point to an installed headless executable; the container does not include it. Recalculation failure retains the original artifact.
 
-## Calibration fails before sending its B requests
+## Calibration fails before sending its b requests
 
-The default `VERIFICATION=off` profile creates no B tasks, while the calibration script expects them. Use the explicit detailed/verification profile and isolated data directory in [testing](./testing.md). The underlying defect is recorded in [known issues](./internal/known-issues.md).
+The default `VERIFICATION=off` profile creates no B tasks, while the calibration script expects them. Use the explicit detailed/verification profile and isolated data directory in [testing](./testing.md). The underlying defect is recorded in [known issues](https://github.com/willtheorangeguy/ucac-ocr/blob/HEAD/docs/internal/known-issues.md).
 
 ## Restore cannot find artifacts
 

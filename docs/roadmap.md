@@ -1,6 +1,6 @@
-# Pool Headcount — Roadmap and Limits
+# Roadmap and limits
 
-This page records gaps supported by the implementation and [historical validation record](../VALIDATION.md). It is not a schedule or a promise of future features. Actionable defects discovered during documentation are tracked separately in [known issues](./internal/known-issues.md).
+This page records gaps supported by the implementation and [historical validation record](https://github.com/willtheorangeguy/ucac-ocr/blob/HEAD/VALIDATION.md). It is not a schedule or a promise of future features. Actionable defects discovered during documentation are tracked separately in [known issues](https://github.com/willtheorangeguy/ucac-ocr/blob/HEAD/docs/internal/known-issues.md).
 
 ## Accuracy and operational validation
 
@@ -23,4 +23,4 @@ OOXML fidelity, formula text, input placement, blank/zero semantics, and indepen
 - Artifacts and original evidence are retained without an automatic pruning policy.
 - A local disconnect cannot prove remote inference stopped; cooldown reduces repeated overlapping requests but cannot control unrelated Ollama clients.
 
-The default rough-count profile, simplified four-step report, and monthly export layout are deliberate current choices, replacing parts of the original [implementation plan](../IMPLEMENTATION_PLAN.md). Optional strict verification remains configurable.
+The default rough-count profile, simplified four-step report, and monthly export layout are deliberate current choices, replacing parts of the original [implementation plan](https://github.com/willtheorangeguy/ucac-ocr/blob/HEAD/IMPLEMENTATION_PLAN.md). Optional strict verification remains configurable.

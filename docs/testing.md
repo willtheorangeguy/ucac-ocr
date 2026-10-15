@@ -1,4 +1,4 @@
-# Pool Headcount — Testing and Calibration
+# Testing and calibration
 
 ## Automated regression suite
 
@@ -10,9 +10,9 @@ python -m pytest -q
 
 The suite covers workbook fidelity and cell anchors, monthly layout, continuation, date/row schemas, numeric normalization, blank/zero/copy-down behavior, ZIP/image ingestion, geometry/corner races, review protection, streaming failures/timeouts, worker ownership/restart, export recovery, backups, web routes, and release deployment assets. Tests normally use temporary storage and mock Ollama responses rather than the real model.
 
-The checked-in legacy workbook and October 9 photo live in [tests/fixtures](../tests/fixtures). Extra operator workbook validation can be skipped when the fixture is absent. The [conftest](../tests/conftest.py) autouse profile is strict, so the suite is not a blanket measurement of the default single-pass profile's OCR accuracy.
+The checked-in legacy workbook and October 9 photo live in [tests/fixtures](https://github.com/willtheorangeguy/ucac-ocr/tree/HEAD/tests/fixtures). Extra operator workbook validation can be skipped when the fixture is absent. The [conftest](https://github.com/willtheorangeguy/ucac-ocr/blob/HEAD/tests/conftest.py) autouse profile is strict, so the suite is not a blanket measurement of the default single-pass profile's OCR accuracy.
 
-[VALIDATION.md](../VALIDATION.md) is a chronological historical record. Saved XML/JSON artifacts in [validation](../validation) include failed runs as well as corrected runs. Their dates, environments, and scopes matter: do not add their test counts together or treat them as current CI results.
+[VALIDATION.md](https://github.com/willtheorangeguy/ucac-ocr/blob/HEAD/VALIDATION.md) is a chronological historical record. Saved XML/JSON artifacts in [validation](https://github.com/willtheorangeguy/ucac-ocr/tree/HEAD/validation) include failed runs as well as corrected runs. Their dates, environments, and scopes matter: do not add their test counts together or treat them as current CI results.
 
 ## Browser and geometry checks
 
@@ -37,7 +37,7 @@ DATA_DIR=/tmp/ucac-calibration-data ROUGH_COUNTS=false VERIFICATION=always \
   python -m app.calibration --output /tmp/ucac-calibration-output
 ```
 
-Choose fresh directories. In PowerShell, set the corresponding `$env:DATA_DIR`, `$env:ROUGH_COUNTS`, and `$env:VERIFICATION` variables in the calibration terminal. `THINK=true` is optional and requires a thinking-capable model. The compatibility defect is recorded in [known issues](./internal/known-issues.md).
+Choose fresh directories. In PowerShell, set the corresponding `$env:DATA_DIR`, `$env:ROUGH_COUNTS`, and `$env:VERIFICATION` variables in the calibration terminal. `THINK=true` is optional and requires a thinking-capable model. The compatibility defect is recorded in [known issues](https://github.com/willtheorangeguy/ucac-ocr/blob/HEAD/docs/internal/known-issues.md).
 
 The benchmark calls preflight, imports the legacy fixture/photo, applies the known corners, creates A/B crops, and uses the worker's lock/owner mechanism for inference. Reports contain model metadata, request options, validated results/errors, and date/first-row comparisons. It uses no cloud service, but crops do leave the application host for the configured Ollama endpoint.
 

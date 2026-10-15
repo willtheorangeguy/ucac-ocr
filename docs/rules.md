@@ -1,6 +1,6 @@
-# Pool Headcount — Count and Workbook Rules
+# Count and workbook rules
 
-These rules describe the current implementation. The original [implementation plan](../IMPLEMENTATION_PLAN.md) required stricter acceptance and daily-sheet output; later operator choices superseded those policies.
+These rules describe the current implementation. The original [implementation plan](https://github.com/willtheorangeguy/ucac-ocr/blob/HEAD/IMPLEMENTATION_PLAN.md) required stricter acceptance and daily-sheet output; later operator choices superseded those policies.
 
 ## Count semantics
 
@@ -16,7 +16,7 @@ These rules describe the current implementation. The original [implementation pl
 
 ## Schedule and columns
 
-[layout.py](../app/layout.py) defines 67 quarter-hour slots: 31 morning slots from 05:15 through 12:45, followed by 36 afternoon slots from 13:00 through 21:45. OCR results must match expected time order, with no duplicate, missing, or shifted rows.
+[layout.py](https://github.com/willtheorangeguy/ucac-ocr/blob/HEAD/app/layout.py) defines 67 quarter-hour slots: 31 morning slots from 05:15 through 12:45, followed by 36 afternoon slots from 13:00 through 21:45. OCR results must match expected time order, with no duplicate, missing, or shifted rows.
 
 | Display column | Stored/API key | Monthly Excel column |
 | --- | --- | --- |
@@ -33,7 +33,7 @@ The validator accepts the legacy daily-sheet workbook, including `MASTER` formul
 
 The first time slot's row is `4 + (day - 1) * 70`; later schedule slots add their zero-based index. For example, October 9 at 05:15 maps to row 564 and Public/External/Internal/Dry occupy D564:G564. The date for that day is at G562.
 
-When a monthly workbook is uploaded, unrelated months, summaries, charts, styles, merges, protection, and printer parts are preserved. New-month replaces just the selected month's entry sheet from `BLANK`; continuation retains that month's counts, notes, and names. Legacy inputs use the bundled [sanitized monthly template](../app/assets/README.md), which contains no sample attendance data.
+When a monthly workbook is uploaded, unrelated months, summaries, charts, styles, merges, protection, and printer parts are preserved. New-month replaces just the selected month's entry sheet from `BLANK`; continuation retains that month's counts, notes, and names. Legacy inputs use the bundled [sanitized monthly template](https://github.com/willtheorangeguy/ucac-ocr/blob/HEAD/app/assets/README.md), which contains no sample attendance data.
 
 Original uploads and previous exports are kept. A restart queues a one-time monthly export for settled legacy exports without repeating successful OCR; paused/cancelled jobs remain paused/cancelled.
 

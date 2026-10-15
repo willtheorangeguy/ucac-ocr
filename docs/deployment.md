@@ -1,4 +1,4 @@
-# Pool Headcount — Deployment and Recovery
+# Deployment and recovery
 
 Use [installation](./installation.md) for initial setup and [configuration](./configuration.md) for settings. These examples use the published Compose file; source builds must include `-f compose.yaml -f compose.build.yaml` consistently.
 
@@ -67,19 +67,19 @@ The CLI uses SQLite's consistent backup API and copies all referenced immutable 
 2. Restore the entire backup into a **fresh** data directory. Preserve relative paths and ensure the runtime user can write it. For source deployments, use the same absolute `DATA_DIR` recorded in `restore.json`.
 3. For Compose, populate a fresh Docker volume with the backup contents at its root and mount that volume at `/data` for both services. For example, after manually creating and populating `pool-data-restored`, an override can select it:
 
-```yaml
-volumes:
-  pool-data:
-    external: true
-    name: pool-data-restored
-```
+    ```yaml
+    volumes:
+      pool-data:
+        external: true
+        name: pool-data-restored
+    ```
 
 4. Check that the backup originally used `/data` before starting this Compose restore. Restore contents must be accessible to UID 10001. Start web first to migrate, inspect status, then start the worker.
 5. Review diagnostics and resume deliberately paused jobs. The next worker recovers abandoned attempts; do not mix a restored database with a newer set of inputs.
 
 There is no automated path-rebasing restore command. Moving between different absolute paths requires rewriting artifact references in jobs, sources, pages, tasks, attempts, exports, and recalculated report metadata on a copy, then validating that copy. An image rollback alone does not undo schema/data changes.
 
-## LAN access
+## Lan access
 
 The app has no user accounts or authorization boundaries between batches, evidence files, and controls. Put LAN exposure behind an access-controlled reverse proxy. Configure `BIND_ADDRESS` deliberately and set a proxy upload body limit consistent with batch limits. Use a direct reachable Ollama address; the inference client bypasses environment HTTP proxies and needs long read deadlines. Avoid proxies that terminate slow streaming calls.
 
