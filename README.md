@@ -21,12 +21,20 @@ To apply these rules to an already processed batch without OCR, use
 `python -m app.cli refresh JOB_ID`. Reviewed decisions are retained.
 
 The main page has four steps: choose the month, add the workbook, add photos,
-and start the import. The batch page has four steps: mark table corners, track progress, fix flagged
-images, then download the latest workbook. Four corner clicks save automatically;
-morning/afternoon is detected from the row count. Image corrections are grouped
+and start the import. The batch page has four steps: check table boxes, track progress, fix flagged
+images, then download the latest workbook. Each photo gets an automatic perspective
+table box before OCR, including photos in multi-file and ZIP uploads. Complete grids
+continue automatically; uncertain grids need four corner clicks, which save automatically.
+Morning/afternoon/full-day is detected from the row count. Both legacy workbooks
+and the Fall 2026 monthly workbook are accepted. Exports always use the new
+monthly `BLANK` layout: Public, External, Internal, Dry. Old **User Group + Coaches**
+counts become **Internal**; External stays blank for old photos. Image corrections are grouped
 under each photo and automatically regenerate the workbook. Only the latest
 download is shown. Download names are `YYYY-MM-headcounts.xlsx`; revision history
 and detailed evidence remain stored and accessible through the CLI/API.
+On restart, settled batches with legacy exports are queued once for a new
+monthly export without repeating OCR; paused batches remain paused. Prior export
+files and reviewed decisions are retained.
 
 ## Install on Windows
 
@@ -50,6 +58,9 @@ Open <http://localhost:8000>. `.env` already has the supplied LAN address;
 change `OLLAMA_BASE_URL` if needed. Web and worker must use the same `DATA_DIR`.
 An environment variable overrides `.env`. Restart both processes after changes.
 No counts run through a cloud service. No Ollama model or global options are changed.
+JPEG uploads include iPhone multi-image JPEG/MPO files: only the primary photo
+is used, with its EXIF orientation applied. Live Photo `.MOV` clips are skipped
+when selected directly or included alongside photos in a ZIP.
 
 After installation, `powershell -ExecutionPolicy Bypass -File .\start.ps1` starts
 both processes in hidden windows. Pause in the app and wait for the current
@@ -92,19 +103,39 @@ were validated after starting the Docker engine.
 ## Use
 
 1. Create a batch with month, workbook, photos/ZIP, and explicit workbook mode.
-   New-month replaces sample daily sheets; continuation retains that month's
+   Choose the photo layout once for all uploaded images before automatic reading;
+   select New printed or New monthly when those forms are photographed.
+   New-month replaces the selected month's inputs; continuation retains that month's
    existing inputs and raises conflicts against new observations. Continuation
    refuses a different month. Unsupported/corrupt photos appear as issues.
 2. The upload commits files and records before returning. Closing the browser
    has no effect on the worker. Hash-identical uploads are deduplicated.
-3. In **Step 1**, click around
+3. In **Step 1**, the app finds table boxes and validates all seven columns and
+   count rows automatically. **Review table boxes** shows saved outlines.
+   Row matching tolerates mild slant, bowed paper, uneven spacing, and approximate
+   clicks. It combines line evidence from strips across the table and can repair
+   a few faint or hidden separators using neighboring rows. Larger missing areas
+   still need review. The resulting grid must match the section's row count.
+   The photo selector lets you inspect any image, including individual ZIP members. Polling
+   keeps the active photo and unfinished clicks stable. **Find box automatically**
+   retries detection; **Start corners again** lets you click around
    **all seven columns, count rows only**, in top-left, top-right, bottom-right,
    bottom-left order. Exclude the column header. The fourth click saves the
-   selection and detects morning/afternoon automatically.
+   selection and detects morning/afternoon/full-day automatically. For the new
+   monthly layout, mark DATE through NOTES for one day's count rows. Select
+   **New monthly** when marking only its morning or afternoon rows. Select
+   **New printed** for the revised printed form with External and Internal.
+   The row selector also allows an explicit section when automatic detection
+   cannot decide; the underlying grid still must validate before reading.
    The original is kept; a high-resolution rectified table and transform are saved.
-   For a photo containing both sections, the source configuration API accepts
-   two geometry objects. Use the API example below until both-table editing is
-   supported in the visual corner picker.
+   For a photo containing two separate sections, automatic detection can save and
+   display both boxes. Manual two-table replacement uses the source configuration
+   API below; redrawing in the picker replaces the selection with one table.
+   **Save box / layout** changes a detected box's layout without repeating clicks.
+   Automatic layout retains the old-printed default for morning/afternoon and
+   the monthly default for full-day tables; select **New printed** explicitly
+   for revised paper forms. Restarting the worker retries unresolved failures from
+   an older detector once, preserving manual corners, skipped images, and pauses.
 4. The default single pass reads counts and blanks with short responses. Numeric
    OCR letter substitutions and readable corrections are accepted automatically.
    Time/date placement is checked. Unreadable cells and conflicting sources go to
@@ -119,8 +150,8 @@ were validated after starting the Docker engine.
    revision without inference. Step 4 shows the latest download. Earlier versions
    remain stored in export history, accessible through the CLI/API.
 
-For the supplied photo, automatic grid detection conservatively rejects its
-perspective. Verified normalized corners for its morning count table are
+The supplied perspective photo now passes automatic table detection. Reference
+normalized corners for its morning count table are
 `[[154,262],[918,252],[968,1185],[138,1200]]`; date is October 9, 2026.
 These coordinates apply only to the supplied 1080 × 1440 re-downloaded fixture.
 
@@ -198,24 +229,24 @@ never automatically deleted. Set file-count/expanded/pixel limits in `.env`.
 
 ## Workbook fidelity and recalculation
 
-openpyxl reads/validates the workbook. A narrowly scoped OOXML writer preserves
-the original image/drawing/printer parts, styles, merged ranges, formulas, row
-sizes, page setup and print layout. Daily sheets clone BLANK XML and immutable
-relationships. Only E3 and requested C/D/E anchors are written. MASTER's daily
-range start is updated; it remains a 3-D **average**, not attendance total.
-IMPORT REPORT is after hidden Boundary B, outside all summary ranges.
+OOXML validation accepts the old daily-sheet workbook (including Boundary-B-only
+MASTER references) and the new monthly `BLANK` from Head Counts - FALL 2026.
+Exports always populate `DATA ENTRY - MON YYYY`, using 70 rows per day, with
+time in C and Public/External/Internal/Dry in D/E/F/G. Dates and times are written
+explicitly, so uncached formulas cannot shift counts. Only real calendar days
+receive dates. Zero and blank remain distinct.
 
-An empty template may have MASTER formulas referencing only `'Boundary B'` after
-the example daily sheet is deleted. This is supported: export expands that
-reference to the generated month's first daily sheet through Boundary B. Wrong
-cell references, sums, and different IFERROR fallbacks are rejected explicitly.
+When a new workbook is uploaded, its other months, summaries, graphs, styles,
+merges, protection and printer parts are preserved. New-month replaces just the
+selected month's entry sheet from BLANK; continuation retains its counts, notes
+and names. With an old workbook, export uses the bundled, sanitized copy of the
+new BLANK, containing no sample attendance data. Old group counts map to Internal.
 
-All exports request recalculation on open. **Cached MASTER values are not
-calculated by Python**. Independent expected averages appear in the report.
-Optional `LIBREOFFICE` enables an isolated headless profile/output directory;
-the recalculation button/CLI preserves the original export and checks cached
-3-D averages before exposing a separate recalculated copy. LibreOffice was not
-installed here, so actual recalculation and rendering in Excel remain unverified.
+Exports request recalculation on open and clear stale summary formula caches.
+Python does not calculate Excel's LET/FILTER summaries. Independent per-time
+averages appear in IMPORT REPORT. Optional `LIBREOFFICE` preserves the original
+export and checks the recalculated monthly inputs against these averages before
+exposing a separate copy. Actual Excel/LibreOffice rendering remains unverified.
 
 ## Backup and restore
 

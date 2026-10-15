@@ -80,11 +80,11 @@ async def uploaded(files):
 
 
 @app.post('/jobs')
-async def new_job(month:str=Form(...),mode:str=Form(...),template:UploadFile=File(...),photos:list[UploadFile]=File(...)):
+async def new_job(month:str=Form(...),mode:str=Form(...),template:UploadFile=File(...),photos:list[UploadFile]=File(...),photo_layout:str=Form('auto')):
     year,mo=map(int,month.split('-'))
     data=await template.read(settings.max_file_bytes+1); await template.close()
     if len(data)>settings.max_file_bytes:raise ValueError('Template too large')
-    job=await asyncio.to_thread(create_job,year,mo,data,mode,await uploaded(photos))
+    job=await asyncio.to_thread(create_job,year,mo,data,mode,await uploaded(photos),photo_layout)
     return RedirectResponse(f'/jobs/{job}',status_code=303)
 
 
@@ -93,8 +93,8 @@ def job_status(job:str):return status(job)
 
 
 @app.post('/api/jobs/{job}/photos')
-async def more_photos(job:str,photos:list[UploadFile]=File(...)):
-    return {'added':await asyncio.to_thread(add_sources,job,await uploaded(photos))}
+async def more_photos(job:str,photos:list[UploadFile]=File(...),photo_layout:str=Form('auto')):
+    return {'added':await asyncio.to_thread(add_sources,job,await uploaded(photos),photo_layout=photo_layout)}
 
 
 @app.post('/api/jobs/{job}/control/{action}')
@@ -114,6 +114,19 @@ async def source_config(job:str,sid:str,request:Request):
 
 @app.post('/api/jobs/{job}/sources/{sid}/reprocess')
 def source_reprocess(job:str,sid:str):reprocess(job,sid);return {'ok':True}
+
+
+@app.post('/api/jobs/{job}/sources/{sid}/detect')
+def source_detect(job:str,sid:str):
+    from PIL import Image
+    from .preprocessing import detect
+    source=query('SELECT * FROM sources WHERE id=? AND job_id=?',(sid,job),True)
+    if not source or not source['normalized']:raise ValueError('No readable image for this source')
+    with Image.open(source['normalized']) as image:geometry=detect(image.convert('RGB'))
+    saved={spec['section']:spec.get('layout','auto') for spec in json.loads(source['geometry'] or '[]')}
+    for spec in geometry:spec['layout']=saved.get(spec['section'],source['layout_hint'])
+    configure_source(job,sid,geometry=geometry,reviewer='automatic detection',expected_version=source['version'])
+    return {'geometry':geometry}
 
 
 @app.post('/api/jobs/{job}/review/{issue_id}')

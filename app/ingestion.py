@@ -10,7 +10,8 @@ from .db import transaction, issue, bump
 from .storage import atomic_write, sha
 from .workbook import validate_template
 
-FORMATS={'JPEG','PNG','WEBP'}
+FORMATS={'JPEG','MPO','PNG','WEBP'}
+PHOTO_LAYOUTS={'auto','legacy','new-paper','monthly'}
 
 
 def expand(files):
@@ -24,11 +25,14 @@ def expand(files):
                     if p.is_absolute() or '..' in p.parts or ':' in entry.filename or (entry.external_attr>>16)&0o170000==0o120000:
                         raise ValueError('Unsafe ZIP path or symlink')
                     if entry.is_dir():continue
+                    # iCloud exports Live Photo videos beside their still images.
+                    if p.suffix.lower()=='.mov':continue
                     if entry.file_size>settings.max_file_bytes: raise ValueError('Expanded file exceeds limit')
                     total+=entry.file_size
                     if total>settings.max_expanded_bytes or len(output)>=settings.max_files: raise ValueError('Expanded ZIP limits exceeded')
                     output.append((entry.filename,z.read(entry)))
         else:
+            if PurePosixPath(name).suffix.lower()=='.mov':continue
             total+=len(data)
             if len(data)>settings.max_file_bytes or total>settings.max_expanded_bytes or len(output)>=settings.max_files: raise ValueError('Batch limits exceeded')
             output.append((name,data))
@@ -38,25 +42,29 @@ def expand(files):
 def decode(data):
     Image.MAX_IMAGE_PIXELS=settings.max_pixels
     with Image.open(io.BytesIO(data)) as im:
-        if im.format not in FORMATS: raise ValueError('Unsupported format; supported: JPEG, PNG, WebP')
+        if im.format not in FORMATS: raise ValueError('Unsupported format; supported: JPEG, MPO, PNG, WebP')
+        # iPhone JPEGs can include an auxiliary image (e.g. an HDR gain map).
+        # Only the primary photo belongs in the OCR pipeline.
+        if im.format=='MPO':im.seek(0)
         if im.width*im.height>settings.max_pixels: raise ValueError('Decoded image exceeds pixel limit')
         im.load()
         return ImageOps.exif_transpose(im).convert('RGB')
 
 
-def create_job(year,month,template,mode,files):
+def create_job(year,month,template,mode,files,photo_layout='auto'):
     from .layout import dates
     dates(year,month)
     if mode not in ('new-month','continuation'):raise ValueError('Choose new-month or continuation')
+    if photo_layout not in PHOTO_LAYOUTS:raise ValueError('Invalid photo layout')
     job=uuid.uuid4().hex
     path=settings.data_dir/job/'template.xlsx'
     atomic_write(path,template)
-    daily=validate_template(path)
+    daily=validate_template(path,year,month)
     if mode=='continuation' and any(not x['date'].startswith(f'{year:04}-{month:02}-') for x in daily):
         raise ValueError('Continuation requires daily sheets in selected month')
     now=time.time()
     expanded=expand(files)
-    if not expanded:raise ValueError('Select at least one photo or a nonempty ZIP')
+    if not expanded:raise ValueError('Select at least one photo or a ZIP containing photos; Live Photo MOV clips are skipped')
     with transaction() as db:
         db.execute('INSERT INTO jobs(id,year,month,mode,template,template_hash,created,updated,state) VALUES(?,?,?,?,?,?,?,?,?)',
                    (job,year,month,mode,str(path),sha(template),now,now,'ingesting'))
@@ -69,12 +77,13 @@ def create_job(year,month,template,mode,files):
                     t,c=tc.split('|')
                     db.execute('INSERT INTO cells(job_id,key,date,time,column_name,value,kind,status,provenance) VALUES(?,?,?,?,?,?,?,?,?)',
                                (job,key(day['date'],t,c),day['date'],t,c,value,'integer','accepted',json.dumps([{'template':sha(template)}])))
-    add_sources(job,expanded,expanded=True)
+    add_sources(job,expanded,expanded=True,photo_layout=photo_layout)
     return job
 
 
-def add_sources(job,files,expanded=False):
+def add_sources(job,files,expanded=False,photo_layout='auto'):
     from .db import query
+    if photo_layout not in PHOTO_LAYOUTS:raise ValueError('Invalid photo layout')
     if not query('SELECT id FROM jobs WHERE id=?',(job,),True): raise ValueError('Unknown job')
     files=files if expanded else expand(files)
     prepared=[]
@@ -93,8 +102,8 @@ def add_sources(job,files,expanded=False):
         if state=='cancelled':raise ValueError('Resume cancelled job before adding files')
         added=0
         for sid,digest,name,path,normalized,error in prepared:
-            r=db.execute('INSERT OR IGNORE INTO sources(id,job_id,hash,filename,path,normalized,state) VALUES(?,?,?,?,?,?,?)',
-                        (sid,job,digest,name,path,normalized,'failed' if error else 'pending'))
+            r=db.execute('INSERT OR IGNORE INTO sources(id,job_id,hash,filename,path,normalized,state,layout_hint) VALUES(?,?,?,?,?,?,?,?)',
+                        (sid,job,digest,name,path,normalized,'failed' if error else 'pending',photo_layout))
             if r.rowcount:
                 added+=1
                 if error:issue(db,job,'source:'+sid,'invalid_source',{'error':error,'filename':name},sid)

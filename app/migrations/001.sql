@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS sources(
  id TEXT PRIMARY KEY, job_id TEXT NOT NULL REFERENCES jobs(id), hash TEXT NOT NULL,
  filename TEXT NOT NULL, path TEXT NOT NULL, normalized TEXT, state TEXT DEFAULT 'pending',
  assigned_date TEXT, date_confirmed INTEGER DEFAULT 0, observed_date TEXT, section TEXT, geometry TEXT, version INTEGER DEFAULT 1,
+ layout_hint TEXT NOT NULL DEFAULT 'auto',
  UNIQUE(job_id,hash));
 CREATE TABLE IF NOT EXISTS pages(
  id INTEGER PRIMARY KEY, source_id TEXT REFERENCES sources(id), version INTEGER, section TEXT,

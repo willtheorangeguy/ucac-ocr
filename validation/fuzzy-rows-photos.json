@@ -1,0 +1,189 @@
+{
+  "version": "grid-6",
+  "photos": 18,
+  "passed": 18,
+  "seconds": 82.02,
+  "ocr_requests": 0,
+  "results": [
+    {
+      "filename": "IMG_3355.png",
+      "previously_blocked": false,
+      "section": "morning",
+      "rows": 31,
+      "first_time": "05:15",
+      "last_time": "12:45",
+      "boundaries": 32,
+      "status": "passed"
+    },
+    {
+      "filename": "IMG_3356.png",
+      "previously_blocked": true,
+      "section": "afternoon",
+      "rows": 36,
+      "first_time": "13:00",
+      "last_time": "21:45",
+      "boundaries": 37,
+      "status": "passed"
+    },
+    {
+      "filename": "IMG_3357.png",
+      "previously_blocked": true,
+      "section": "morning",
+      "rows": 31,
+      "first_time": "05:15",
+      "last_time": "12:45",
+      "boundaries": 32,
+      "status": "passed"
+    },
+    {
+      "filename": "IMG_3358.png",
+      "previously_blocked": true,
+      "section": "afternoon",
+      "rows": 36,
+      "first_time": "13:00",
+      "last_time": "21:45",
+      "boundaries": 37,
+      "status": "passed"
+    },
+    {
+      "filename": "IMG_3359.png",
+      "previously_blocked": true,
+      "section": "morning",
+      "rows": 31,
+      "first_time": "05:15",
+      "last_time": "12:45",
+      "boundaries": 32,
+      "status": "passed"
+    },
+    {
+      "filename": "IMG_3360.png",
+      "previously_blocked": true,
+      "section": "afternoon",
+      "rows": 36,
+      "first_time": "13:00",
+      "last_time": "21:45",
+      "boundaries": 37,
+      "status": "passed"
+    },
+    {
+      "filename": "IMG_3361.png",
+      "previously_blocked": true,
+      "section": "morning",
+      "rows": 31,
+      "first_time": "05:15",
+      "last_time": "12:45",
+      "boundaries": 32,
+      "status": "passed"
+    },
+    {
+      "filename": "IMG_3362.png",
+      "previously_blocked": true,
+      "section": "afternoon",
+      "rows": 36,
+      "first_time": "13:00",
+      "last_time": "21:45",
+      "boundaries": 37,
+      "status": "passed"
+    },
+    {
+      "filename": "IMG_3363.png",
+      "previously_blocked": true,
+      "section": "morning",
+      "rows": 31,
+      "first_time": "05:15",
+      "last_time": "12:45",
+      "boundaries": 32,
+      "status": "passed"
+    },
+    {
+      "filename": "IMG_3364.png",
+      "previously_blocked": true,
+      "section": "afternoon",
+      "rows": 36,
+      "first_time": "13:00",
+      "last_time": "21:45",
+      "boundaries": 37,
+      "status": "passed"
+    },
+    {
+      "filename": "IMG_3365.png",
+      "previously_blocked": false,
+      "section": "morning",
+      "rows": 31,
+      "first_time": "05:15",
+      "last_time": "12:45",
+      "boundaries": 32,
+      "status": "passed"
+    },
+    {
+      "filename": "IMG_3366.png",
+      "previously_blocked": false,
+      "section": "afternoon",
+      "rows": 36,
+      "first_time": "13:00",
+      "last_time": "21:45",
+      "boundaries": 37,
+      "status": "passed"
+    },
+    {
+      "filename": "IMG_3367.png",
+      "previously_blocked": false,
+      "section": "morning",
+      "rows": 31,
+      "first_time": "05:15",
+      "last_time": "12:45",
+      "boundaries": 32,
+      "status": "passed"
+    },
+    {
+      "filename": "IMG_3368.png",
+      "previously_blocked": false,
+      "section": "afternoon",
+      "rows": 36,
+      "first_time": "13:00",
+      "last_time": "21:45",
+      "boundaries": 37,
+      "status": "passed"
+    },
+    {
+      "filename": "IMG_3369.png",
+      "previously_blocked": true,
+      "section": "morning",
+      "rows": 31,
+      "first_time": "05:15",
+      "last_time": "12:45",
+      "boundaries": 32,
+      "status": "passed"
+    },
+    {
+      "filename": "IMG_3370.png",
+      "previously_blocked": false,
+      "section": "afternoon",
+      "rows": 36,
+      "first_time": "13:00",
+      "last_time": "21:45",
+      "boundaries": 37,
+      "status": "passed"
+    },
+    {
+      "filename": "IMG_3371.png",
+      "previously_blocked": false,
+      "section": "morning",
+      "rows": 31,
+      "first_time": "05:15",
+      "last_time": "12:45",
+      "boundaries": 32,
+      "status": "passed"
+    },
+    {
+      "filename": "IMG_3372.png",
+      "previously_blocked": true,
+      "section": "afternoon",
+      "rows": 36,
+      "first_time": "13:00",
+      "last_time": "21:45",
+      "boundaries": 37,
+      "status": "passed"
+    }
+  ]
+}

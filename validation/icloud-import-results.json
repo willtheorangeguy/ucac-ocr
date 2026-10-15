@@ -1,0 +1,19 @@
+{
+  "archive": "iCloud Photos.zip",
+  "photos": 18,
+  "states": {
+    "pending": 18
+  },
+  "normalized": 18,
+  "invalid_sources": 0,
+  "mov_sources": 0,
+  "seconds": 22.76,
+  "deployed_browser_check": {
+    "url": "http://127.0.0.1:8000/jobs/be89d8c5d58348cba57d7e6b001981d0",
+    "summary": "0 of 18 images ready. Mark the next image below.",
+    "photo": "IMG_3355.JPEG",
+    "canvas_width": 1536,
+    "script_errors": [],
+    "recovered_existing_photos": 18
+  }
+}

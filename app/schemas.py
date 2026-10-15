@@ -69,6 +69,7 @@ class Row(Strict):
     public: Reading
     group: Reading
     dry: Reading
+    external: Reading = Field(default_factory=lambda: Reading(raw_text=None,kind='blank',terms=None,ambiguous=False,reason=None))
 
 
 class Extraction(Strict):
@@ -99,6 +100,7 @@ class QuickRow(Strict):
     public: str | int | None
     group: str | int | None
     dry: str | int | None
+    external: str | int | None = None
 
 
 class QuickExtraction(Strict):
@@ -110,7 +112,7 @@ class QuickExtraction(Strict):
             return Reading(raw_text=raw,kind='blank' if raw is None or raw=='' else 'unclear',
                            terms=None,ambiguous=False,reason=None)
         return Extraction(date=None,section='unknown',ambiguous=False,reason=None,
-            rows=[Row(time=r.time,public=read(r.public),group=read(r.group),dry=read(r.dry)) for r in self.rows])
+            rows=[Row(time=r.time,public=read(r.public),group=read(r.group),dry=read(r.dry),external=read(r.external)) for r in self.rows])
 
 
 def equivalent(a,b):

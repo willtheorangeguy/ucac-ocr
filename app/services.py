@@ -55,11 +55,13 @@ def refresh_counts(job):
             reconcile(source['id'])
 
 
-def configure_source(job,sid,assigned_date=None,geometry=None,reviewer='operator',confirm=False):
+def configure_source(job,sid,assigned_date=None,geometry=None,reviewer='operator',confirm=False,expected_version=None):
     rerun=False
     with transaction() as db:
         source=db.execute('SELECT * FROM sources WHERE id=? AND job_id=?',(sid,job)).fetchone()
         if not source:raise ValueError('Unknown source')
+        if expected_version is not None and source['version']!=expected_version:
+            raise ValueError('This photo changed during detection. Reload its saved box and try again.')
         j=db.execute('SELECT * FROM jobs WHERE id=?',(job,)).fetchone()
         if db.execute("SELECT 1 FROM tasks WHERE source_id=? AND state='in_flight'",(sid,)).fetchone():raise ValueError('Pause and wait for active request before changing source')
         if assigned_date:
@@ -72,8 +74,11 @@ def configure_source(job,sid,assigned_date=None,geometry=None,reviewer='operator
             if not isinstance(specs,list) or not 1<=len(specs)<=2:raise ValueError('One or two table definitions required')
             for spec in specs:
                 if spec['section']=='auto':spec['section']=identify_section(Image.open(source['normalized']).convert('RGB'),spec['corners'])
-                if spec['section'] not in ('morning','afternoon'):raise ValueError('Invalid section')
+                if spec['section'] not in ('morning','afternoon','both'):raise ValueError('Invalid section')
+                if spec.get('layout','auto') not in ('auto','legacy','new-paper','monthly'):raise ValueError('Invalid sheet layout')
                 rectify(Image.open(source['normalized']).convert('RGB'),spec['corners'])
+            if len({spec['section'] for spec in specs})!=len(specs) or (len(specs)>1 and any(s['section']=='both' for s in specs)):
+                raise ValueError('Table definitions must cover different sections')
             db.execute("UPDATE sources SET geometry=?,version=version+1,state='pending' WHERE id=?",(json.dumps(geometry),sid))
             db.execute("UPDATE tasks SET state='failed' WHERE source_id=? AND state IN ('pending','retry_wait')",(sid,))
             rerun=True

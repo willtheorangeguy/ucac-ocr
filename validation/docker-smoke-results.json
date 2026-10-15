@@ -1,0 +1,51 @@
+{
+  "host": "http://127.0.0.1:8000",
+  "template": "Head Counts - FALL 2026.xlsx",
+  "checks": {
+    "web_health": {
+      "web": "ok"
+    },
+    "ocr_connection": {
+      "ok": true,
+      "version": "0.40.3",
+      "digest": "b7b9afeaf023a549a9e6fc7960694f3c32fc490d415bbdf1751e2f390cf4ae48",
+      "capabilities": [
+        "completion",
+        "vision",
+        "tools",
+        "thinking"
+      ],
+      "model": "qwen3.5-hermes:64k"
+    },
+    "browser_corner_save": true,
+    "live_ocr_first_row": true,
+    "monthly_download": true,
+    "desktop_mobile_browser": true,
+    "no_browser_errors": true
+  },
+  "started": 1792028517.9076538,
+  "job": "6f08b809d9664b08910c01798323ad2d",
+  "job_url": "http://127.0.0.1:8000/jobs/6f08b809d9664b08910c01798323ad2d",
+  "state": "completed_with_issues",
+  "task_states": {
+    "pending": 0,
+    "in_flight": 0,
+    "succeeded": 4,
+    "failed": 0,
+    "retry_wait": 0
+  },
+  "first_row": {
+    "dry": 2,
+    "external": null,
+    "group": 32,
+    "public": 0
+  },
+  "first_row_status": {
+    "dry": "accepted",
+    "external": "accepted",
+    "group": "accepted",
+    "public": "accepted"
+  },
+  "issue_count": 0,
+  "finished": 1792028597.568257
+}

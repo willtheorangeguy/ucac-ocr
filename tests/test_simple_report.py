@@ -16,7 +16,7 @@ def test_numbered_report_and_clean_existing_download(data):
         export=db.execute('INSERT INTO exports(job_id,revision,path,checksum,draft,created,report) VALUES(?,?,?,?,?,?,?)',(job,1,str(path),'fixture',1,time.time(),'{}')).lastrowid
     with TestClient(app) as client:
         html=client.get('/jobs/'+job).text
-        headings=['Mark the table corners','Track progress','Fix flagged images','Download the workbook']
+        headings=['Check the table boxes','Track progress','Fix flagged images','Download the workbook']
         assert [html.index(h) for h in headings]==sorted(html.index(h) for h in headings)
         for old in ('Add photos','All extracted cells','Attempts and evidence','Export approved snapshot','Cancel batch','Review note','Connection</a>'):
             assert old not in html

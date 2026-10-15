@@ -8,7 +8,7 @@ import uuid
 from pathlib import Path
 from filelock import FileLock, Timeout
 from .config import settings
-from .db import migrate, transaction, query, issue
+from .db import migrate, transaction, query, issue, bump
 from .preprocessing import preprocess, VERSION, save_image
 from .prompts import VERSION as PROMPT_VERSION, SCHEMA_VERSION
 from .ollama_client import preflight, health, extract, AvailabilityError, ContentError, PermanentError, ResourceError
@@ -41,6 +41,13 @@ class Worker:
             db.execute("UPDATE attempts SET status='interrupted',finished=? WHERE status='in_flight'",(time.time(),))
             db.execute("UPDATE tasks SET state='retry_wait',owner=NULL,next_at=? WHERE state='in_flight'",(self.cooldown,))
             db.execute('INSERT INTO worker_owner(singleton,generation,heartbeat,cooldown_until) VALUES(1,?,?,?) ON CONFLICT(singleton) DO UPDATE SET generation=excluded.generation,heartbeat=excluded.heartbeat,active_task=NULL,cooldown_until=excluded.cooldown_until',(self.generation,time.time(),self.cooldown))
+            # Try the improved detector once for old, unresolved failures. Never
+            # reopen an acknowledged image or replace operator-supplied corners.
+            retry=db.execute("SELECT DISTINCT s.id,s.job_id FROM sources s JOIN issues i ON i.source_id=s.id WHERE s.state='needs_review' AND s.normalized IS NOT NULL AND i.kind='geometry' AND i.resolved=0 AND COALESCE(json_extract(i.detail,'$.detector_version'),'')!=? AND NOT EXISTS(SELECT 1 FROM tasks t WHERE t.source_id=s.id AND t.version=s.version)",(VERSION,)).fetchall()
+            for source in retry:
+                db.execute("UPDATE sources SET state='pending',version=version+1 WHERE id=?",(source['id'],))
+                db.execute("UPDATE issues SET resolved=1 WHERE source_id=? AND kind='geometry'",(source['id'],))
+            for job_id in {s['job_id'] for s in retry}:bump(db,job_id)
             for a in db.execute('SELECT status FROM attempts ORDER BY id DESC LIMIT 5'):
                 if a['status']=='AvailabilityError':self.failures+=1
                 else:break
@@ -65,8 +72,9 @@ class Worker:
                 try:await asyncio.to_thread(preprocess,source)
                 except Exception as e:
                     with transaction() as db:
-                        db.execute("UPDATE sources SET state='needs_review' WHERE id=?",(source['id'],))
-                        issue(db,job['id'],f'geometry:{source["id"]}:{source["version"]}','geometry',{'error':str(e),'message':'Assign table corners and section'},source['id'])
+                        updated=db.execute("UPDATE sources SET state='needs_review' WHERE id=? AND version=? AND state='pending'",(source['id'],source['version']))
+                        if not updated.rowcount:continue
+                        issue(db,job['id'],f'geometry:{source["id"]}:{source["version"]}','geometry',{'error':str(e),'message':'Assign table corners and section','detector_version':VERSION},source['id'])
                         db.execute('UPDATE jobs SET revision=revision+1 WHERE id=?',(job['id'],))
             sources=query("SELECT * FROM sources WHERE job_id=? AND state='processing'",(job['id'],))
             for source in sources:
@@ -132,7 +140,7 @@ class Worker:
                 db.execute("UPDATE attempts SET status='succeeded',finished=?,metrics=?,raw_path=? WHERE id=?",(time.time(),json.dumps(metrics),str(completed),attempt))
                 db.execute("UPDATE tasks SET state='succeeded',result=?,owner=NULL WHERE id=?",(result.model_dump_json(),task['id']))
                 for row in result.rows:
-                    for col in ('public','group','dry'):
+                    for col in ('public','group','dry','external'):
                         db.execute('INSERT OR REPLACE INTO readings(task_id,cell_key,reading) VALUES(?,?,?)',(task['id'],row.time+'|'+col,getattr(row,col).model_dump_json()))
             self.failures=0
         except (AvailabilityError,ContentError,PermanentError,ResourceError) as e:

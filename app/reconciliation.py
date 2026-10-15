@@ -62,7 +62,7 @@ def reconcile(source_id):
             expected=json.loads(t['expected'])
             for row in result['rows']:
                 for c in COLUMNS:
-                    reading=Reading.model_validate(row[c]).model_dump()
+                    reading=Reading.model_validate(row.get(c,dict(raw_text=None,kind='blank',terms=None,ambiguous=False,reason=None))).model_dump()
                     if result['ambiguous'] or result['section'] not in ('both','unknown','morning' if row['time']<'13:00' else 'afternoon'):
                         reading={**reading,'ambiguous':True,'reason':'Date/section/alignment uncertainty'}
                     observations[(row['time'],c)].append(dict(pass_name=t['pass'],reading=reading,task=t['id'],source=source_id,crop=t['crop'],version=source['version']))

@@ -1,4 +1,134 @@
-# Validation — October 10, 2026
+# Validation — October 14, 2026
+
+## Fuzzy row geometry — October 15, 2026
+
+The grid-6 matcher combines evidence from five strips across each table, corrects
+residual row slant, merges duplicate separators, and interpolates small internal
+gaps from neighboring row spacing. It tolerates approximate corner padding and
+uneven rows, while requiring the supported morning/afternoon/full-day schedule.
+Large missing regions and blank pages remain rejected. Slanted column fallback
+requires continuous line support so printed time digits do not become borders.
+Saved page geometry records the fitted row boundaries and detector version.
+
+All 18 normalized photos from the operator's latest iCloud batch now detect and
+generate complete crops locally: nine morning tables with 31 rows and nine
+afternoon tables with 36 rows. Eleven of those photos were blocked by grid-5.
+`validation/fuzzy-rows-photos.json` records the per-photo results. This validation
+used temporary data and made no OCR requests; it does not measure count accuracy.
+`validation/fuzzy_rows_check.py` reproduces the check from downloaded source PNGs
+and their API metadata without changing the operator database.
+
+Regression checks include residual slant from imprecise corner clicks, generous
+padding, bowed/uneven rows, faint separators, preserved time ordering, missing
+regions, and retries that keep previously saved manual corners. Results are in
+`validation/fuzzy-row-results.xml`.
+The full Windows run passed 152 tests with one skip; the subsequent saved-corner
+retry checks also passed. The deployed Linux image passed 25 focused row and
+corner tests. The rebuilt web and worker services are healthy and automatically
+retry unresolved failures from the previous detector, retaining manual corners.
+
+## Automatic table boxes and batch/ZIP picker — October 15, 2026
+
+Perspective table detection now validates observed columns and count rows before
+queuing OCR. The consented reference photo is detected without corner clicks and
+produces all 31 morning rows. Synthetic checks cover morning, afternoon, full-day,
+two separate tables, inset headings, perspective distortion, and rejection of
+incomplete grids. Multi-file and nested ZIP uploads preserve independent source
+images and boxes, while corrupt members remain isolated as source issues.
+
+Batch photo-layout selection is saved before automatic reading, and individual
+manual overrides survive redetection. Tests cover existing-database upgrades,
+concurrent manual changes during detection, and the one-time retry of old
+unresolved detector failures without resuming a paused batch.
+
+`validation/corner_browser_check.py` passed in real Chromium at 1100px and 390px.
+It verifies four-click saving, rejection/retry, coordinate scaling, switching ZIP
+members, retaining partial selections through polling, saves to the selected
+source, visible saved outlines, and late image-load responses. These browser
+checks use local mock status responses and no operator data or OCR service.
+
+Full regression results are in `validation/auto-box-results.xml`. Docker Desktop
+was not running during this change; no live deployment or new model inference
+was performed.
+
+## iCloud JPEG/MPO and Live Photo ZIP import
+
+The supplied iCloud Photos ZIP contains 18 JPEG/MPO photos and 11 MOV video
+companions. The importer now selects each MPO's primary image, applies its EXIF
+orientation, and skips MOV files before creating sources. The actual ZIP imports
+all 18 photos with zero invalid-source issues and no video sources. Results are
+in `validation/icloud-import-results.json`.
+
+Regression tests cover distinct primary/auxiliary frames, EXIF rotation, pixel
+limits, mixed ZIPs, deduplication, MOV-only selections, and unsafe MOV paths.
+Existing path/symlink checks still apply before skipping a ZIP entry. Container
+test results are in `validation/icloud-linux-results.xml`.
+
+The image was rebuilt and both Compose services restarted. All 18 previously
+rejected sources in the operator's existing batch were recovered from their
+unchanged originals; invalid-source issues were resolved and the recovery was
+audited. The browser can display the recovered photos for corner selection.
+
+## Live Docker deployment and import
+
+Started Docker Desktop and rebuilt/deployed the current app with Compose. Both
+web and worker report healthy. Container diagnostics reach the configured LAN
+Ollama 0.40.3 endpoint and confirm vision support for qwen3.5-hermes:64k.
+
+A real Chromium browser uploaded the Fall workbook and the labelled reference
+photo, marked its corners, waited for four successful OCR requests, and downloaded
+the new monthly workbook. The manually checked first row is Public 0, External
+blank, Internal 32, Dry 2, with all four fields accepted. The generated October
+entry sheet contains these values at D564:G564 and October 9 at G562. There are
+no source/cell issues; the test remains a draft because other dates lack photos.
+Desktop and mobile report pages have no browser script errors. Results,
+download, and screenshots are under `validation/docker-smoke-*` and
+`validation/screenshots/docker-live-import*`.
+
+The live check exposed a race: an old automatic geometry failure could commit
+after a browser corner save and put the newer source version back into review.
+Worker failure handling now updates only its original pending source version;
+successful preprocessing also verifies the version/state before committing
+pages and tasks. Two deterministic regression tests exercise both interleavings.
+The corrected image is deployed and the same live test batch completes.
+
+The full Linux-container regression results are in
+`validation/docker-linux-results.xml`. Live OCR validates the old reference photo;
+new-format crop mapping is covered by synthetic grids. Neither a full-sheet
+accuracy rate nor Excel's own rendering/recalculation is claimed.
+
+## Monthly Fall 2026 layout and corner matching
+
+Legacy daily workbooks and the supplied Fall 2026 workbook now export to the
+monthly BLANK layout. Old User Group + Coaches becomes Internal; External stays
+blank for legacy photos. Tests cover separate External/Internal/Dry values,
+all 67 time slots, new-month resets, continuation of counts and notes, leap-year
+dates, blank versus zero, selected-month imports, and retention of the actual
+Fall workbook's other months, summaries, styles and original BLANK. The fallback
+asset contains only sanitized BLANK content. Existing settled batches queue one
+new export on restart, retaining historical files without repeating OCR.
+
+The real photo's full preprocessing passes with all four corners moved inward
+or outward by up to eight pixels horizontally and vertically. Synthetic legacy,
+new printed, and full-day monthly grids verify the cropped column mapping.
+Printed layouts require manual corner/layout selection because their identical
+column count cannot distinguish legacy User Group from new External/Internal.
+
+A headless Chromium check at 1100px and 390px verifies scaled click coordinates,
+retention of a partial selection across the five-second polling cycle, rejected
+corner reset/retry, and automatic save after four clicks. It serves local mocked
+APIs and never touches operator counts or the OCR server. Run it with:
+
+```powershell
+.\.venv\Scripts\python.exe validation/corner_browser_check.py C:\path\to\chrome.exe
+```
+
+The browser validation needs `websocket-client` in addition to the app's pinned
+dependencies. Automated results are in `validation/monthly-layout-results.xml`
+and `validation/monthly-corners-results.xml`. Excel rendering/recalculation and
+live OCR on new-format handwritten photos have not been run.
+
+The sections below record previous validation runs.
 
 ## Main-page steps, copy-down and likely blanks
 

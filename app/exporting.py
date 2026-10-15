@@ -46,11 +46,22 @@ def recalculate(export_id):
             result=out/Path(item['path']).name
             from openpyxl import load_workbook
             wb=load_workbook(result,data_only=True)
-            from .layout import SCHEDULE, EXCEL_COLS
-            for tc,average in json.loads(item['report'])['expected_averages'].items():
-                t,c=tc.split('|'); actual=wb['MASTER'][f'{EXCEL_COLS[c]}{SCHEDULE[t]}'].value
-                if not isinstance(actual,(int,float)) or abs(actual-average)>1e-8:raise ValueError('Recalculated 3-D average verification failed')
-            wb.close()
+            from .layout import SCHEDULE, LEGACY_EXCEL_COLS, month_cell, dates
+            report=json.loads(item['report'])
+            job=query('SELECT year,month FROM jobs WHERE id=?',(item['job_id'],),True)
+            try:
+                monthly={}
+                if report.get('layout')=='monthly':
+                    monthly={c.coordinate:c.value for row in wb[report['entry_sheet']].iter_rows() for c in row}
+                for tc,average in report['expected_averages'].items():
+                    t,c=tc.split('|')
+                    if report.get('layout')=='monthly':
+                        nums=[monthly.get(month_cell(d.isoformat(),t,c)) for d in dates(job['year'],job['month'])]
+                        nums=[n for n in nums if isinstance(n,(int,float))]
+                        actual=sum(nums)/len(nums) if nums else None
+                    else:actual=wb['MASTER'][f'{LEGACY_EXCEL_COLS[c]}{SCHEDULE[t]}'].value
+                    if not isinstance(actual,(int,float)) or abs(actual-average)>1e-8:raise ValueError('Recalculated workbook verification failed')
+            finally:wb.close()
             # Keep the faithful original and expose recalculated artifact separately.
             target=Path(item['path']).with_suffix('.recalculated.xlsx'); atomic_write(target,result.read_bytes())
             with transaction() as db:

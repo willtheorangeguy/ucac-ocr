@@ -22,7 +22,7 @@ def test_continuation_preserves_existing_and_rejects_other_month(data,tmp_path):
     assert query('SELECT value FROM cells WHERE job_id=?',(job,),True)['value']==5
     exported=export_job(job)
     wb=load_workbook(exported['path'],read_only=True)
-    assert wb['September 9']['C10'].value==5
-    assert wb['MASTER']['C10'].value=='=IFERROR(AVERAGE(\'September 1:Boundary B\'!C10),"")'
+    assert wb['DATA ENTRY - SEP 2026']['D564'].value==5
+    assert 'MASTER' not in wb.sheetnames
     assert 'October 1' not in wb.sheetnames
     wb.close()

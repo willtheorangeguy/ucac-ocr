@@ -41,6 +41,17 @@ def migrate():
     with closing(connect()) as db:
         db.execute('PRAGMA journal_mode=WAL')
         db.executescript((__import__('pathlib').Path(__file__).parent / 'migrations/001.sql').read_text())
+        db.execute('BEGIN IMMEDIATE')
+        if 'layout_hint' not in {r['name'] for r in db.execute('PRAGMA table_info(sources)')}:
+            db.execute("ALTER TABLE sources ADD COLUMN layout_hint TEXT NOT NULL DEFAULT 'auto'")
+        # Re-export settled legacy batches once, preserving their immutable
+        # artifacts and all OCR/review decisions. Paused batches stay paused.
+        for job in db.execute('SELECT j.id,j.revision,e.report FROM jobs j JOIN exports e ON e.job_id=j.id AND e.revision=j.revision WHERE j.revision=j.exported_revision').fetchall():
+            if json.loads(job['report']).get('layout')=='monthly':continue
+            db.execute("UPDATE jobs SET revision=revision+1,state=CASE WHEN state IN ('paused','cancelled') THEN state ELSE 'queued' END,updated=? WHERE id=?",(time.time(),job['id']))
+            db.execute('INSERT INTO decisions(job_id,action,note,reviewer,created) VALUES(?,?,?,?,?)',
+                (job['id'],'export_layout','Regenerate legacy export using the monthly layout','system',time.time()))
+        db.commit()
 
 
 def issue(db, job, key, kind, detail, source=None, cell=None):

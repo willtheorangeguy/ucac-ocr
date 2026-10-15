@@ -44,7 +44,7 @@ def test_date_repair_reuses_successful_tasks(data,photo):
     reconcile(source['id'])
     assert query('SELECT * FROM issues WHERE resolved=0',one=True)['kind']=='date'
     configure_source(job,source['id'],'2026-10-09',reviewer='R',confirm=True)
-    assert len(query('SELECT * FROM cells'))==3
+    assert len(query('SELECT * FROM cells'))==4
     assert len(query("SELECT * FROM tasks WHERE state='succeeded'"))==2
 
 
@@ -64,6 +64,6 @@ def test_immutable_export_revision_and_review_regeneration(data,photo):
     assert second['revision']>first['revision']
     from openpyxl import load_workbook
     old=load_workbook(first['path'],read_only=True);new=load_workbook(second['path'],read_only=True)
-    assert old['October 9']['C10'].value==0
-    assert new['October 9']['C10'].value is None
+    assert old['DATA ENTRY - OCT 2026']['D564'].value==0
+    assert new['DATA ENTRY - OCT 2026']['D564'].value is None
     old.close();new.close()

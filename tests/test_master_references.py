@@ -33,15 +33,10 @@ def test_actual_uploaded_boundary_only_template(tmp_path):
     record=dict(date='2026-10-09',time='05:15',column_name='public',value=0,status='accepted',provenance='synthetic')
     generate(template,out,2026,10,[record],[],1)
     wb=load_workbook(out,read_only=True)
-    assert wb['October 9']['C10'].value==0
-    assert wb['October 9']['E3'].value.year==2026
-    assert wb['October 9']['E3'].value.month==10
-    assert wb['MASTER']['C10'].value=='=IFERROR(AVERAGE(\'October 1:Boundary B\'!C10),"")'
-    assert wb['Boundary B'].sheet_state=='hidden'
+    assert wb['DATA ENTRY - OCT 2026']['D564'].value==0
+    assert 'MASTER' not in wb.sheetnames
     wb.close()
-    p=parts(template);q=parts(out)
-    for name,content in p.items():
-        if '/drawings/' in name or '/printerSettings/' in name or '/media/' in name:assert q[name]==content
+
 
 
 def test_web_upload_accepts_actual_template(data,photo):

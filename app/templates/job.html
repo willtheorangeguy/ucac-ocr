@@ -2,14 +2,20 @@
 <div id="job" data-job="{{job.id}}">
   <h1>{{'%04d-%02d'|format(job.year,job.month)}} headcounts</h1>
   <section class="step panel" aria-labelledby="corners-heading">
-    <h2 id="corners-heading"><span class="step-number">1</span> Mark the table corners</h2>
+    <h2 id="corners-heading"><span class="step-number">1</span> Check the table boxes</h2>
     <p id="corner-summary"></p>
+    <button type="button" id="review-boxes" class="secondary">Review table boxes</button>
     <div id="corner-editor" hidden>
-      <p>Click around all seven columns and count rows, excluding the heading: <strong>top left, top right, bottom right, bottom left</strong>.</p>
+      <label>Photo<select id="corner-photo"></select></label>
+      <p>Table boxes are found automatically. If a box needs fixing, start again and mark all seven columns and count rows, excluding headings: <strong>top left, top right, bottom right, bottom left</strong>. On the monthly sheet, include DATE through NOTES for one day only.</p>
+      <label>Photo layout<select id="corner-layout"><option value="auto">Detect automatically (old printed / full-day monthly)</option><option value="legacy">Old printed: User Group + Coaches</option><option value="new-paper">New printed: External + Internal</option><option value="monthly">New monthly: DATE, TIME, PUBLIC, EXTERNAL, INTERNAL, DRY, NOTES</option></select></label>
+      <label>Count rows<select id="corner-section"><option value="auto">Detect automatically</option><option value="morning">Morning: 05:15–12:45</option><option value="afternoon">Afternoon: 13:00–21:45</option><option value="both">Full day: 05:15–21:45</option></select></label>
       <p id="corner-filename"></p>
       <canvas id="corner-canvas" aria-label="Click the four table corners"></canvas>
       <p id="corner-status" role="status"></p>
       <button type="button" id="clear-corners">Start corners again</button>
+      <button type="button" id="detect-corners" class="secondary">Find box automatically</button>
+      <button type="button" id="save-corners" class="secondary">Save box / layout</button>
     </div>
   </section>
   <section class="step panel" aria-labelledby="progress-heading">

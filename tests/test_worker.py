@@ -46,7 +46,7 @@ async def test_62_sources_sequential_resume_and_autoexport(data,photo,ollama):
         assert query('SELECT state FROM jobs',one=True)['state']=='completed_with_issues'
         export=query('SELECT * FROM exports',one=True)
         assert Path(export['path']).is_file() and export['draft']==1
-        assert len(query('SELECT * FROM cells'))==9
+        assert len(query('SELECT * FROM cells'))==12
         assert query('SELECT value FROM cells WHERE column_name="group"',one=True)['value']==32
         await worker.tick()
         assert len(ollama.requests)==124
