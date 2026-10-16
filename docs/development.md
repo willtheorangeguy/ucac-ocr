@@ -1,8 +1,8 @@
-# Pool Headcount — Development
+# Development
 
 ## Local environment
 
-Use Python 3.14 and follow the source [installation](./installation.md). Install the complete pinned [requirements.lock](../requirements.lock) into a virtual environment. The repository has no package build metadata or separate development dependency group; the lock includes pytest and pytest-asyncio.
+Use Python 3.14 and follow the source [installation](./installation.md). Install the complete pinned [requirements.lock](https://github.com/willtheorangeguy/ucac-ocr/blob/HEAD/requirements.lock) into a virtual environment. The repository has no package build metadata or separate development dependency group; the lock includes pytest and pytest-asyncio.
 
 Run the web app and worker separately from the checkout, using one shared development `DATA_DIR`. Keep development data separate from operator data. The [architecture guide](./architecture.md) maps modules and durable storage boundaries.
 
@@ -22,28 +22,24 @@ Tests use a temporary data directory and a mock local Ollama HTTP server. The au
 
 Keep database transactions outside long HTTP/model requests. Preserve raw evidence and reviewed cells when changing reconciliation. Treat blank, zero, missing observations, failed reads, and conflicts as separate states. Test source version races and revision changes when editing preprocessing/export behavior. New settings belong in `app/config.py`, `.env.example` where useful, and [configuration](./configuration.md).
 
-When changing workbook output, preserve unrelated OOXML parts and verify calendar/time anchors, continuation, and monthly column mapping. The bundled monthly template's provenance is documented in [app/assets/README.md](../app/assets/README.md).
+When changing workbook output, preserve unrelated OOXML parts and verify calendar/time anchors, continuation, and monthly column mapping. The bundled monthly template's provenance is documented in [app/assets/README.md](https://github.com/willtheorangeguy/ucac-ocr/blob/HEAD/app/assets/README.md).
 
-## Release pipeline
+## Documentation preview
 
-[Publish release container](../.github/workflows/publish-container.yml) runs when a GitHub release is published, rather than on every push or pull request. It:
+Create a separate virtual environment for documentation dependencies. From the checkout, clone the shared repository and run its preview helper:
 
-1. Checks out the release tag and generates version-pinned deployment files.
-2. Builds a Linux AMD64 test image and runs pytest with the checkout mounted read-only.
-3. Publishes Linux AMD64/ARM64 images to `ghcr.io/willtheorangeguy/ucac-ocr` using the repository `GITHUB_TOKEN` with package-write permission.
-4. Starts the published image with standalone Compose and waits for service health.
-5. Attaches `compose.yaml`, `default.env`, and the ZIP preserving `.env` to the release, then cleans up its temporary smoke-test volume.
-
-The release generator accepts `vMAJOR.MINOR.PATCH` with an optional prerelease suffix. Stable `v0.1.0` publishes `0.1.0`, `v0.1.0`, `0.1`, and `latest`; prereleases do not update minor/latest tags. Attachments are generated from `.env.example`, never an operator's `.env`.
-
-Generate assets locally without publishing:
-
-```sh
-python scripts/prepare_release.py v0.1.0 ghcr.io/willtheorangeguy/ucac-ocr /tmp/ucac-release-files
+```bash
+git clone --depth 1 https://github.com/willtheorangeguy/mkdocs .mkdocs-shared
+python3 -m venv /tmp/ucac-docs-venv
+. /tmp/ucac-docs-venv/bin/activate
+pip install -r .mkdocs-shared/shared/requirements-docs.txt
+bash .mkdocs-shared/scripts/docs-serve.sh --build
 ```
 
-Keep generated output outside the source tree; release publishing is a separate maintainer action. The workflow's standalone health check does not establish live OCR accuracy or GPU performance.
+The helper creates `.mkdocs-shared`, stages ignored design assets, and runs `mkdocs build --strict`. Without `--build`, it serves a local preview. Set `PORT=8001` if the application already uses 8000. On Windows use `.mkdocs-shared/scripts/docs-serve.ps1 -Build` in the documentation environment.
+
+The [CI/CD guide](ci-cd.md) covers documentation deployment and release containers.
 
 ## Contributing
 
-Use the org-wide [Contributing Guide](https://github.com/willtheorangeguy/.github/blob/main/CONTRIBUTING.md) and [Code of Conduct](https://github.com/willtheorangeguy/.github/blob/main/CODE_OF_CONDUCT.md). Include the user-visible behavior, relevant checks and skip reasons, and any data migration/recovery implications. Record discovered defects in [internal/known-issues.md](./internal/known-issues.md); do not silently resolve code issues in a documentation change.
+Use the org-wide [Contributing Guide](https://github.com/willtheorangeguy/.github/blob/main/CONTRIBUTING.md) and [Code of Conduct](https://github.com/willtheorangeguy/.github/blob/main/CODE_OF_CONDUCT.md). Include the user-visible behavior, relevant checks and skip reasons, and any data migration/recovery implications. Record discovered defects in [internal/known-issues.md](https://github.com/willtheorangeguy/ucac-ocr/blob/HEAD/docs/internal/known-issues.md); do not silently resolve code issues in a documentation change.

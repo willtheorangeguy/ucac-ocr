@@ -1,6 +1,6 @@
-# Pool Headcount — Usage
+# Usage
 
-Use the web app at <http://localhost:8000> after [installation](./installation.md). The main page creates batches; each batch page shows table boxes, progress, flagged images, and the latest download. Batch management and detailed evidence remain available through the [CLI](./commands.md) and [API](./api.md).
+Use the web app at [local application](http://localhost:8000) after [installation](./installation.md). The main page creates batches; each batch page shows table boxes, progress, flagged images, and the latest download. Batch management and detailed evidence remain available through the [CLI](./commands.md) and [API](./api.md).
 
 ## Create a batch
 

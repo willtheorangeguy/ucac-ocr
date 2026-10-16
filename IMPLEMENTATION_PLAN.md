@@ -1,6 +1,6 @@
 # Pool headcount photo importer — Codex implementation plan
 
-> Historical design specification. Current operating instructions live in [docs/README.md](docs/README.md). Later operator decisions supersede the original strict OCR, copy-down, and daily-sheet export policies; see [count and workbook rules](docs/rules.md).
+> Historical design specification. Current operating instructions live in [docs/index.md](docs/index.md). Later operator decisions supersede the original strict OCR, copy-down, and daily-sheet export policies; see [count and workbook rules](docs/rules.md).
 
 ## Build brief
 

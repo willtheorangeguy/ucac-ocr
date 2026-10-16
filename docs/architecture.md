@@ -1,44 +1,76 @@
-# Pool Headcount — Architecture
+# Architecture
 
-The application separates upload/review HTTP requests from long model calls. FastAPI persists inputs and returns a job URL; a separately running worker reads durable task records, calls Ollama sequentially, reconciles readings, and exports immutable workbooks. Closing the browser does not affect processing.
+Pool Headcount separates short upload/review HTTP requests from long model calls. A durable SQLite queue and immutable artifacts let a worker resume unfinished work after a process or network interruption.
 
-```text
-Browser or CLI
-      |
-      v
-Ingestion -----> originals + normalized images
-      |
-      v
-SQLite jobs/sources -> preprocessing -> pages + crop tasks
-      |                                      |
-      |                                  single worker
-      |                                      |
-      |                             streamed Ollama requests
-      |                                      |
-      +<----- readings + attempts + raw responses
-      |
- reconciliation <---- audited review decisions
-      |
- cells + issues -> workbook export -> revisioned XLSX + IMPORT REPORT
+## Overview
+
+The browser and CLI persist evidence before model processing begins. The worker reconciles successful readings with audited reviews before exporting workbooks.
+
+```mermaid
+graph LR
+  A[Browser or CLI] -->|persists inputs| B[Ingestion]
+  B -->|saves originals| C[Artifact storage]
+  B -->|queues sources| D[SQLite]
+  D -->|supplies pending work| E[Worker and preprocessing]
+  E -->|sends image crops| F[Ollama]
+  F -->|streams readings| E
+  E -->|checkpoints evidence| D
+  A -->|submits review decisions| D
+  D -->|supplies accepted cells| G[Export]
+  G -->|writes revisions| C
 ```
 
-## Components and project layout
+## Components
 
-| Path | Responsibility |
-| --- | --- |
-| [app/main.py](../app/main.py), `templates/`, `static/` | HTTP routes, server-rendered views, table selection, and polling UI. |
-| [app/cli.py](../app/cli.py), [services.py](../app/services.py) | CLI operations, status, controls, source configuration, and cell corrections. |
-| [ingestion.py](../app/ingestion.py), [storage.py](../app/storage.py) | ZIP validation, decoding, deduplication, content hashes, and atomic artifact writes. |
-| [preprocessing.py](../app/preprocessing.py) | Perspective detection, grid fitting, sections, rectification, and alternate crops. |
-| [worker.py](../app/worker.py) | Ownership, heartbeat, queue dispatch, retries, recovery, and settled exports. |
-| [ollama_client.py](../app/ollama_client.py), [prompts.py](../app/prompts.py), [schemas.py](../app/schemas.py) | Model capability checks, bounded streaming, extraction prompts, and structural validation. |
-| [count_text.py](../app/count_text.py), [reconciliation.py](../app/reconciliation.py) | Numeric normalization, copy-down, A/B and cross-source agreement, and reviews. |
-| [layout.py](../app/layout.py), [workbook.py](../app/workbook.py), [monthly_workbook.py](../app/monthly_workbook.py) | Time/cell mapping, OOXML validation, and monthly workbook generation. |
-| [exporting.py](../app/exporting.py) | Export snapshots, per-job file locks, revision checks, checksums, and optional recalculation. |
-| [db.py](../app/db.py), [migrations/001.sql](../app/migrations/001.sql) | SQLite connections, transactions, and startup upgrades. |
-| [assets/README.md](../app/assets/README.md) | Provenance of the sanitized monthly fallback template. |
-| [tests/](../tests), [validation/](../validation) | Mock regression tests and historical validation evidence/scripts. |
-| [scripts/prepare_release.py](../scripts/prepare_release.py) | Generate version-pinned release deployment files. |
+### Web and CLI
+
+`app/main.py`, `templates/`, and `static/` own HTTP routes, server-rendered views, corner selection, and polling. `app/cli.py` calls ingestion and services directly instead of making HTTP requests. `services.py` owns status, batch controls, versioned source configuration, and corrections. Neither entry point performs background inference by itself.
+
+### Ingestion and preprocessing
+
+`ingestion.py` validates ZIP paths, applies limits, decodes supported image formats, and deduplicates source hashes within a job. `storage.py` hashes artifacts and writes atomically. `preprocessing.py` detects grids, fits perspective transforms, identifies sections, and creates versioned rectified pages and crops.
+
+### Worker and model boundary
+
+`worker.py` owns the single-worker lock, database generation, heartbeat, task selection, retries, and recovery. `ollama_client.py` owns capability checks and bounded streamed HTTP calls. `prompts.py` supplies extraction instructions and `schemas.py` validates response structure. Database transactions do not span inference.
+
+### Reconciliation and review
+
+`count_text.py` normalizes count expressions. `reconciliation.py` compares A/B and cross-source observations, resolves copy-down, retains provenance, and protects reviewed cells. Human decisions advance the job revision and can regenerate an export without asking the model again.
+
+### Workbook export
+
+`layout.py` maps schedule slots and columns. `workbook.py` validates legacy OOXML (Office Open XML) inputs; `monthly_workbook.py` reads/writes the monthly layout. `exporting.py` snapshots revisions, checks immutable templates, uses per-job locks, and optionally verifies a separate LibreOffice result. The [fallback template provenance](https://github.com/willtheorangeguy/ucac-ocr/blob/HEAD/app/assets/README.md) records how the sanitized asset was prepared.
+
+### Durable storage
+
+`db.py` configures SQLite transactions and compatibility migrations. `migrations/001.sql` defines the base schema. One local data directory contains the database, locks, logs, and per-job artifacts. Stored paths are significant during restore.
+
+## Data flow
+
+1. Web or CLI stores the workbook/photo originals and records sources before returning the job identifier.
+2. The worker turns each eligible source into versioned pages and crop tasks. Uncertain geometry requires a saved correction before inference.
+3. Sequential Ollama calls commit complete validated readings together with attempt metadata. Raw streams remain evidence. Reconciliation combines observations in date/time order and raises issues for uncertainty.
+4. Reviews change accepted cells and advance the revision. When work settles, export writes an immutable XLSX and import report. An edit during export leaves the older artifact tied to its snapshot revision and queues a newer one.
+
+## Directory layout
+
+```text
+app/
+├── main.py, cli.py, services.py    Entry points and operations
+├── worker.py, ollama_client.py     Durable inference
+├── ingestion.py, preprocessing.py Input and image geometry
+├── schemas.py, reconciliation.py  Validation and review
+├── workbook.py, monthly_workbook.py
+├── db.py, migrations/             Durable records
+├── assets/                       Sanitized monthly template
+└── templates/, static/            Web UI
+tests/                            Isolated regression suite and fixtures
+validation/                       Historical reports and validation helpers
+scripts/prepare_release.py        Version-pinned deployment assets
+docs/                             Site source
+mkdocs.yml                        Shared configuration inheritance and nav
+```
 
 ## Storage and schema
 
